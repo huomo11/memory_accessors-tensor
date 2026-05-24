@@ -46,9 +46,14 @@ struct TensorCOO {
 };
 
 struct PreparedEntry {
-    uint64_t row = 0;
-    uint32_t k = 0;
-    std::size_t nz = 0;
+    uint64_t row;
+    uint32_t k;
+    std::size_t nz;
+
+    PreparedEntry() : row(0), k(0), nz(0) {}
+
+    PreparedEntry(uint64_t row_, uint32_t k_, std::size_t nz_)
+        : row(row_), k(k_), nz(nz_) {}
 };
 
 struct Prepared {
@@ -340,7 +345,7 @@ Prepared prepare_entries(const TensorCOO& tensor, const Args& args, const int mo
     prepared.row_count = output_rows_for_mode(args, mode);
 
     for (std::size_t nz = 0; nz < tensor.values64.size(); ++nz) {
-        prepared.entries[nz] = PreparedEntry{output_row(tensor, args, mode, nz), mode_index(tensor, mode, nz), nz};
+        prepared.entries[nz] = PreparedEntry(output_row(tensor, args, mode, nz), mode_index(tensor, mode, nz), nz);
     }
 
     std::sort(prepared.entries.begin(), prepared.entries.end(), [](const PreparedEntry& a, const PreparedEntry& b) {
