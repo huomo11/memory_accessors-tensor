@@ -1,0 +1,1285 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineSystem.cmake:212 (message)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      The system is: Windows - 10.0.26200 - AMD64
+...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineSystem.cmake:212 (message)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      The system is: Windows - 10.0.26200 - AMD64
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:3 (project)"
+    mode: "file"
+    variable: "src_in"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "CMakeCXXCompilerId.cpp.in"
+    candidate_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/"
+    found: "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeCXXCompilerId.cpp.in"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\21209\\miniconda3"
+        - "C:\\Users\\21209\\miniconda3\\Library\\mingw-w64\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\usr\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Scripts"
+        - "C:\\Users\\21209\\miniconda3\\bin"
+        - "C:\\Users\\21209\\miniconda3\\condabin"
+        - "C:\\Users\\21209\\.codex\\tmp\\arg0\\codex-arg0KeGCIv"
+        - "D:\\WORK\\Microsoft VS Code"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files\\dotnet"
+        - "D:\\WORK\\Microsoft VS Code\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Users\\21209\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\21209\\.local\\bin"
+        - "C:\\Users\\21209\\AppData\\Roaming\\npm"
+        - "D:\\WORK\\MiKTeX\\miktex\\bin\\x64"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe\\ripgrep-15.1.0-x86_64-pc-windows-msvc"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1.1-full_build\\bin"
+        - "."
+        - "c:\\Users\\21209\\.vscode\\extensions\\openai.chatgpt-26.519.32039-win32-x64\\bin\\windows-x86_64"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler:  
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      閫傜敤浜?.NET Framework MSBuild 鐗堟湰 18.5.4+cb4e32d21
+      鐢熸垚鍚姩鏃堕棿涓?2026/5/24 21:12:04銆?
+      
+      鑺傜偣 1 涓婄殑椤圭洰鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\4.2.3-msvc3\\CompilerIdCXX\\CompilerIdCXX.vcxproj鈥?榛樿鐩爣)銆?
+      PrepareForBuild:
+        姝ｅ湪鍒涘缓鐩綍鈥淒ebug\\鈥濄€?
+        宸插惎鐢ㄧ粨鏋勫寲杈撳嚭銆傜紪璇戝櫒璇婃柇鐨勬牸寮忚缃皢鍙嶆槧閿欒灞傛缁撴瀯銆傛湁鍏宠缁嗕俊鎭紝璇峰弬闃?https://aka.ms/cpp/structured-output銆?
+        姝ｅ湪鍒涘缓鐩綍鈥淒ebug\\CompilerIdCXX.tlog\\鈥濄€?
+      InitializeBuildStatus:
+        姝ｅ湪鍒涘缓鈥淒ebug\\CompilerIdCXX.tlog\\unsuccessfulbuild鈥濓紝鍥犱负宸叉寚瀹氣€淎lwaysCreate鈥濄€?
+        姝ｅ湪瀵光€淒ebug\\CompilerIdCXX.tlog\\unsuccessfulbuild鈥濇墽琛?Touch 浠诲姟銆?
+      ClCompile:
+        C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /nologo /W0 /WX- /diagnostics:column /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\\\" /Fd"Debug\\vc145.pdb" /external:W0 /Gd /TP /FC /errorReport:queue CMakeCXXCompilerId.cpp
+        CMakeCXXCompilerId.cpp
+      Link:
+        C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:".\\CompilerIdCXX.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\\CompilerIdCXX.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\\CompilerIdCXX.lib" /MACHINE:X64 Debug\\CMakeCXXCompilerId.obj
+        CompilerIdCXX.vcxproj -> D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\4.2.3-msvc3\\CompilerIdCXX\\CompilerIdCXX.exe
+      PostBuildEvent:
+        for %%i in (cl.exe) do @echo CMAKE_CXX_COMPILER=%%~$PATH:i
+        :VCEnd
+        CMAKE_CXX_COMPILER=C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe
+      FinalizeBuildStatus:
+        姝ｅ湪鍒犻櫎鏂囦欢鈥淒ebug\\CompilerIdCXX.tlog\\unsuccessfulbuild鈥濄€?
+        姝ｅ湪瀵光€淒ebug\\CompilerIdCXX.tlog\\CompilerIdCXX.lastbuildstate鈥濇墽琛?Touch 浠诲姟銆?
+      宸插畬鎴愮敓鎴愰」鐩€淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\4.2.3-msvc3\\CompilerIdCXX\\CompilerIdCXX.vcxproj鈥?榛樿鐩爣)鐨勬搷浣溿€?
+      
+      宸叉垚鍔熺敓鎴愩€?
+          0 涓鍛?
+          0 涓敊璇?
+      
+      宸茬敤鏃堕棿 00:00:00.65
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.exe"
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.vcxproj"
+      
+      The CXX compiler identification is MSVC, found in:
+        D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/4.2.3-msvc3/CompilerIdCXX/CompilerIdCXX.exe
+      
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:37 (find_program)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:65 (__resolve_tool_path)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:103 (__resolve_linker_path)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:3 (project)"
+    mode: "program"
+    variable: "_CMAKE_TOOL_WITH_PATH"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "link"
+    candidate_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/"
+      - "C:/Users/21209/miniconda3/"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/"
+      - "C:/Users/21209/miniconda3/Library/bin/"
+      - "C:/Users/21209/miniconda3/Scripts/"
+      - "C:/Users/21209/miniconda3/bin/"
+      - "C:/Users/21209/miniconda3/condabin/"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/"
+      - "D:/WORK/Microsoft VS Code/"
+      - "C:/Windows/SysWOW64/"
+      - "C:/Windows/"
+      - "C:/Windows/SysWOW64/wbem/"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/"
+      - "C:/Windows/SysWOW64/OpenSSH/"
+      - "C:/Program Files/dotnet/"
+      - "D:/WORK/Microsoft VS Code/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/21209/.local/bin/"
+      - "C:/Users/21209/AppData/Roaming/npm/"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/"
+      - "D:/WORK/CODO/memory_accessors-tensor/"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/"
+    searched_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/link.com"
+    found: "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/link.exe"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\21209\\miniconda3"
+        - "C:\\Users\\21209\\miniconda3\\Library\\mingw-w64\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\usr\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Scripts"
+        - "C:\\Users\\21209\\miniconda3\\bin"
+        - "C:\\Users\\21209\\miniconda3\\condabin"
+        - "C:\\Users\\21209\\.codex\\tmp\\arg0\\codex-arg0KeGCIv"
+        - "D:\\WORK\\Microsoft VS Code"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files\\dotnet"
+        - "D:\\WORK\\Microsoft VS Code\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Users\\21209\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\21209\\.local\\bin"
+        - "C:\\Users\\21209\\AppData\\Roaming\\npm"
+        - "D:\\WORK\\MiKTeX\\miktex\\bin\\x64"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe\\ripgrep-15.1.0-x86_64-pc-windows-msvc"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1.1-full_build\\bin"
+        - "."
+        - "c:\\Users\\21209\\.vscode\\extensions\\openai.chatgpt-26.519.32039-win32-x64\\bin\\windows-x86_64"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:37 (find_program)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:65 (__resolve_tool_path)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:104 (__resolve_linker_path)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:3 (project)"
+    mode: "program"
+    variable: "_CMAKE_TOOL_WITH_PATH"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "lld-link"
+    candidate_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/"
+      - "C:/Users/21209/miniconda3/"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/"
+      - "C:/Users/21209/miniconda3/Library/bin/"
+      - "C:/Users/21209/miniconda3/Scripts/"
+      - "C:/Users/21209/miniconda3/bin/"
+      - "C:/Users/21209/miniconda3/condabin/"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/"
+      - "D:/WORK/Microsoft VS Code/"
+      - "C:/Windows/SysWOW64/"
+      - "C:/Windows/"
+      - "C:/Windows/SysWOW64/wbem/"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/"
+      - "C:/Windows/SysWOW64/OpenSSH/"
+      - "C:/Program Files/dotnet/"
+      - "D:/WORK/Microsoft VS Code/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/21209/.local/bin/"
+      - "C:/Users/21209/AppData/Roaming/npm/"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/"
+      - "D:/WORK/CODO/memory_accessors-tensor/"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/"
+    searched_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/lld-link.com"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/lld-link.exe"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/lld-link"
+      - "C:/Users/21209/miniconda3/lld-link.com"
+      - "C:/Users/21209/miniconda3/lld-link.exe"
+      - "C:/Users/21209/miniconda3/lld-link"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/lld-link.com"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/lld-link.exe"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/lld-link"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/lld-link.com"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/lld-link.exe"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/lld-link"
+      - "C:/Users/21209/miniconda3/Library/bin/lld-link.com"
+      - "C:/Users/21209/miniconda3/Library/bin/lld-link.exe"
+      - "C:/Users/21209/miniconda3/Library/bin/lld-link"
+      - "C:/Users/21209/miniconda3/Scripts/lld-link.com"
+      - "C:/Users/21209/miniconda3/Scripts/lld-link.exe"
+      - "C:/Users/21209/miniconda3/Scripts/lld-link"
+      - "C:/Users/21209/miniconda3/bin/lld-link.com"
+      - "C:/Users/21209/miniconda3/bin/lld-link.exe"
+      - "C:/Users/21209/miniconda3/bin/lld-link"
+      - "C:/Users/21209/miniconda3/condabin/lld-link.com"
+      - "C:/Users/21209/miniconda3/condabin/lld-link.exe"
+      - "C:/Users/21209/miniconda3/condabin/lld-link"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/lld-link.com"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/lld-link.exe"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/lld-link"
+      - "D:/WORK/Microsoft VS Code/lld-link.com"
+      - "D:/WORK/Microsoft VS Code/lld-link.exe"
+      - "D:/WORK/Microsoft VS Code/lld-link"
+      - "C:/Windows/SysWOW64/lld-link.com"
+      - "C:/Windows/SysWOW64/lld-link.exe"
+      - "C:/Windows/SysWOW64/lld-link"
+      - "C:/Windows/lld-link.com"
+      - "C:/Windows/lld-link.exe"
+      - "C:/Windows/lld-link"
+      - "C:/Windows/SysWOW64/wbem/lld-link.com"
+      - "C:/Windows/SysWOW64/wbem/lld-link.exe"
+      - "C:/Windows/SysWOW64/wbem/lld-link"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/lld-link.com"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/lld-link.exe"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/lld-link"
+      - "C:/Windows/SysWOW64/OpenSSH/lld-link.com"
+      - "C:/Windows/SysWOW64/OpenSSH/lld-link.exe"
+      - "C:/Windows/SysWOW64/OpenSSH/lld-link"
+      - "C:/Program Files/dotnet/lld-link.com"
+      - "C:/Program Files/dotnet/lld-link.exe"
+      - "C:/Program Files/dotnet/lld-link"
+      - "D:/WORK/Microsoft VS Code/bin/lld-link.com"
+      - "D:/WORK/Microsoft VS Code/bin/lld-link.exe"
+      - "D:/WORK/Microsoft VS Code/bin/lld-link"
+      - "C:/Program Files/Git/cmd/lld-link.com"
+      - "C:/Program Files/Git/cmd/lld-link.exe"
+      - "C:/Program Files/Git/cmd/lld-link"
+      - "C:/Program Files/nodejs/lld-link.com"
+      - "C:/Program Files/nodejs/lld-link.exe"
+      - "C:/Program Files/nodejs/lld-link"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/lld-link.com"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/lld-link.exe"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/lld-link"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/lld-link.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/lld-link.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/lld-link"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/lld-link.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/lld-link.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/lld-link"
+      - "C:/Users/21209/.local/bin/lld-link.com"
+      - "C:/Users/21209/.local/bin/lld-link.exe"
+      - "C:/Users/21209/.local/bin/lld-link"
+      - "C:/Users/21209/AppData/Roaming/npm/lld-link.com"
+      - "C:/Users/21209/AppData/Roaming/npm/lld-link.exe"
+      - "C:/Users/21209/AppData/Roaming/npm/lld-link"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/lld-link.com"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/lld-link.exe"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/lld-link"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/lld-link.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/lld-link.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/lld-link"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/lld-link.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/lld-link.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/lld-link"
+      - "D:/WORK/CODO/memory_accessors-tensor/lld-link.com"
+      - "D:/WORK/CODO/memory_accessors-tensor/lld-link.exe"
+      - "D:/WORK/CODO/memory_accessors-tensor/lld-link"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/lld-link.com"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/lld-link.exe"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/lld-link"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\21209\\miniconda3"
+        - "C:\\Users\\21209\\miniconda3\\Library\\mingw-w64\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\usr\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Scripts"
+        - "C:\\Users\\21209\\miniconda3\\bin"
+        - "C:\\Users\\21209\\miniconda3\\condabin"
+        - "C:\\Users\\21209\\.codex\\tmp\\arg0\\codex-arg0KeGCIv"
+        - "D:\\WORK\\Microsoft VS Code"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files\\dotnet"
+        - "D:\\WORK\\Microsoft VS Code\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Users\\21209\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\21209\\.local\\bin"
+        - "C:\\Users\\21209\\AppData\\Roaming\\npm"
+        - "D:\\WORK\\MiKTeX\\miktex\\bin\\x64"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe\\ripgrep-15.1.0-x86_64-pc-windows-msvc"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1.1-full_build\\bin"
+        - "."
+        - "c:\\Users\\21209\\.vscode\\extensions\\openai.chatgpt-26.519.32039-win32-x64\\bin\\windows-x86_64"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:3 (project)"
+    mode: "program"
+    variable: "CMAKE_LINKER"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "link"
+    candidate_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/"
+      - "C:/Users/21209/miniconda3/"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/"
+      - "C:/Users/21209/miniconda3/Library/bin/"
+      - "C:/Users/21209/miniconda3/Scripts/"
+      - "C:/Users/21209/miniconda3/bin/"
+      - "C:/Users/21209/miniconda3/condabin/"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/"
+      - "D:/WORK/Microsoft VS Code/"
+      - "C:/Windows/SysWOW64/"
+      - "C:/Windows/"
+      - "C:/Windows/SysWOW64/wbem/"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/"
+      - "C:/Windows/SysWOW64/OpenSSH/"
+      - "C:/Program Files/dotnet/"
+      - "D:/WORK/Microsoft VS Code/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/21209/.local/bin/"
+      - "C:/Users/21209/AppData/Roaming/npm/"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/"
+      - "D:/WORK/CODO/memory_accessors-tensor/"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/"
+    searched_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/link.com"
+    found: "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/link.exe"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\21209\\miniconda3"
+        - "C:\\Users\\21209\\miniconda3\\Library\\mingw-w64\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\usr\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Scripts"
+        - "C:\\Users\\21209\\miniconda3\\bin"
+        - "C:\\Users\\21209\\miniconda3\\condabin"
+        - "C:\\Users\\21209\\.codex\\tmp\\arg0\\codex-arg0KeGCIv"
+        - "D:\\WORK\\Microsoft VS Code"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files\\dotnet"
+        - "D:\\WORK\\Microsoft VS Code\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Users\\21209\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\21209\\.local\\bin"
+        - "C:\\Users\\21209\\AppData\\Roaming\\npm"
+        - "D:\\WORK\\MiKTeX\\miktex\\bin\\x64"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe\\ripgrep-15.1.0-x86_64-pc-windows-msvc"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1.1-full_build\\bin"
+        - "."
+        - "c:\\Users\\21209\\.vscode\\extensions\\openai.chatgpt-26.519.32039-win32-x64\\bin\\windows-x86_64"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:3 (project)"
+    mode: "program"
+    variable: "CMAKE_MT"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "mt"
+    candidate_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/"
+      - "C:/Users/21209/miniconda3/"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/"
+      - "C:/Users/21209/miniconda3/Library/bin/"
+      - "C:/Users/21209/miniconda3/Scripts/"
+      - "C:/Users/21209/miniconda3/bin/"
+      - "C:/Users/21209/miniconda3/condabin/"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/"
+      - "D:/WORK/Microsoft VS Code/"
+      - "C:/Windows/SysWOW64/"
+      - "C:/Windows/"
+      - "C:/Windows/SysWOW64/wbem/"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/"
+      - "C:/Windows/SysWOW64/OpenSSH/"
+      - "C:/Program Files/dotnet/"
+      - "D:/WORK/Microsoft VS Code/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/21209/.local/bin/"
+      - "C:/Users/21209/AppData/Roaming/npm/"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/"
+      - "D:/WORK/CODO/memory_accessors-tensor/"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/"
+    searched_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/mt.com"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/mt.exe"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/mt"
+      - "C:/Users/21209/miniconda3/mt.com"
+      - "C:/Users/21209/miniconda3/mt.exe"
+      - "C:/Users/21209/miniconda3/mt"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/mt.com"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/mt.exe"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/mt"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/mt.com"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/mt.exe"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/mt"
+      - "C:/Users/21209/miniconda3/Library/bin/mt.com"
+      - "C:/Users/21209/miniconda3/Library/bin/mt.exe"
+      - "C:/Users/21209/miniconda3/Library/bin/mt"
+      - "C:/Users/21209/miniconda3/Scripts/mt.com"
+      - "C:/Users/21209/miniconda3/Scripts/mt.exe"
+      - "C:/Users/21209/miniconda3/Scripts/mt"
+      - "C:/Users/21209/miniconda3/bin/mt.com"
+      - "C:/Users/21209/miniconda3/bin/mt.exe"
+      - "C:/Users/21209/miniconda3/bin/mt"
+      - "C:/Users/21209/miniconda3/condabin/mt.com"
+      - "C:/Users/21209/miniconda3/condabin/mt.exe"
+      - "C:/Users/21209/miniconda3/condabin/mt"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/mt.com"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/mt.exe"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/mt"
+      - "D:/WORK/Microsoft VS Code/mt.com"
+      - "D:/WORK/Microsoft VS Code/mt.exe"
+      - "D:/WORK/Microsoft VS Code/mt"
+      - "C:/Windows/SysWOW64/mt.com"
+      - "C:/Windows/SysWOW64/mt.exe"
+      - "C:/Windows/SysWOW64/mt"
+      - "C:/Windows/mt.com"
+      - "C:/Windows/mt.exe"
+      - "C:/Windows/mt"
+      - "C:/Windows/SysWOW64/wbem/mt.com"
+      - "C:/Windows/SysWOW64/wbem/mt.exe"
+      - "C:/Windows/SysWOW64/wbem/mt"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/mt.com"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/mt.exe"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/mt"
+      - "C:/Windows/SysWOW64/OpenSSH/mt.com"
+      - "C:/Windows/SysWOW64/OpenSSH/mt.exe"
+      - "C:/Windows/SysWOW64/OpenSSH/mt"
+      - "C:/Program Files/dotnet/mt.com"
+      - "C:/Program Files/dotnet/mt.exe"
+      - "C:/Program Files/dotnet/mt"
+      - "D:/WORK/Microsoft VS Code/bin/mt.com"
+      - "D:/WORK/Microsoft VS Code/bin/mt.exe"
+      - "D:/WORK/Microsoft VS Code/bin/mt"
+      - "C:/Program Files/Git/cmd/mt.com"
+      - "C:/Program Files/Git/cmd/mt.exe"
+      - "C:/Program Files/Git/cmd/mt"
+      - "C:/Program Files/nodejs/mt.com"
+      - "C:/Program Files/nodejs/mt.exe"
+      - "C:/Program Files/nodejs/mt"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/mt.com"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/mt.exe"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/mt"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/mt.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/mt.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/mt"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/mt.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/mt.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/mt"
+      - "C:/Users/21209/.local/bin/mt.com"
+      - "C:/Users/21209/.local/bin/mt.exe"
+      - "C:/Users/21209/.local/bin/mt"
+      - "C:/Users/21209/AppData/Roaming/npm/mt.com"
+      - "C:/Users/21209/AppData/Roaming/npm/mt.exe"
+      - "C:/Users/21209/AppData/Roaming/npm/mt"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/mt.com"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/mt.exe"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/mt"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/mt.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/mt.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/mt"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/mt.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/mt.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/mt"
+      - "D:/WORK/CODO/memory_accessors-tensor/mt.com"
+      - "D:/WORK/CODO/memory_accessors-tensor/mt.exe"
+      - "D:/WORK/CODO/memory_accessors-tensor/mt"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/mt.com"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/mt.exe"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/mt"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\21209\\miniconda3"
+        - "C:\\Users\\21209\\miniconda3\\Library\\mingw-w64\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\usr\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Scripts"
+        - "C:\\Users\\21209\\miniconda3\\bin"
+        - "C:\\Users\\21209\\miniconda3\\condabin"
+        - "C:\\Users\\21209\\.codex\\tmp\\arg0\\codex-arg0KeGCIv"
+        - "D:\\WORK\\Microsoft VS Code"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files\\dotnet"
+        - "D:\\WORK\\Microsoft VS Code\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Users\\21209\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\21209\\.local\\bin"
+        - "C:\\Users\\21209\\AppData\\Roaming\\npm"
+        - "D:\\WORK\\MiKTeX\\miktex\\bin\\x64"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe\\ripgrep-15.1.0-x86_64-pc-windows-msvc"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1.1-full_build\\bin"
+        - "."
+        - "c:\\Users\\21209\\.vscode\\extensions\\openai.chatgpt-26.519.32039-win32-x64\\bin\\windows-x86_64"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
+      - "CMakeLists.txt:3 (project)"
+    mode: "program"
+    variable: "CMAKE_AR"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "lib"
+    candidate_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/"
+      - "C:/Users/21209/miniconda3/"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/"
+      - "C:/Users/21209/miniconda3/Library/bin/"
+      - "C:/Users/21209/miniconda3/Scripts/"
+      - "C:/Users/21209/miniconda3/bin/"
+      - "C:/Users/21209/miniconda3/condabin/"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/"
+      - "D:/WORK/Microsoft VS Code/"
+      - "C:/Windows/SysWOW64/"
+      - "C:/Windows/"
+      - "C:/Windows/SysWOW64/wbem/"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/"
+      - "C:/Windows/SysWOW64/OpenSSH/"
+      - "C:/Program Files/dotnet/"
+      - "D:/WORK/Microsoft VS Code/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/21209/.local/bin/"
+      - "C:/Users/21209/AppData/Roaming/npm/"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/"
+      - "D:/WORK/CODO/memory_accessors-tensor/"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/"
+    searched_directories:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/lib.com"
+    found: "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/lib.exe"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\21209\\miniconda3"
+        - "C:\\Users\\21209\\miniconda3\\Library\\mingw-w64\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\usr\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Scripts"
+        - "C:\\Users\\21209\\miniconda3\\bin"
+        - "C:\\Users\\21209\\miniconda3\\condabin"
+        - "C:\\Users\\21209\\.codex\\tmp\\arg0\\codex-arg0KeGCIv"
+        - "D:\\WORK\\Microsoft VS Code"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files\\dotnet"
+        - "D:\\WORK\\Microsoft VS Code\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Users\\21209\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\21209\\.local\\bin"
+        - "C:\\Users\\21209\\AppData\\Roaming\\npm"
+        - "D:\\WORK\\MiKTeX\\miktex\\bin\\x64"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe\\ripgrep-15.1.0-x86_64-pc-windows-msvc"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1.1-full_build\\bin"
+        - "."
+        - "c:\\Users\\21209\\.vscode\\extensions\\openai.chatgpt-26.519.32039-win32-x64\\bin\\windows-x86_64"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineRCCompiler.cmake:40 (find_program)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/Platform/Windows-MSVC.cmake:584 (enable_language)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/Platform/Windows-MSVC.cmake:557 (__windows_compiler_msvc_enable_rc)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/Platform/Windows-MSVC-CXX.cmake:6 (__windows_compiler_msvc)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeCXXInformation.cmake:48 (include)"
+      - "CMakeLists.txt:3 (project)"
+    mode: "program"
+    variable: "CMAKE_RC_COMPILER"
+    description: "RC compiler"
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "rc"
+    candidate_directories:
+      - "C:/Users/21209/miniconda3/"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/"
+      - "C:/Users/21209/miniconda3/Library/bin/"
+      - "C:/Users/21209/miniconda3/Scripts/"
+      - "C:/Users/21209/miniconda3/bin/"
+      - "C:/Users/21209/miniconda3/condabin/"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/"
+      - "D:/WORK/Microsoft VS Code/"
+      - "C:/Windows/SysWOW64/"
+      - "C:/Windows/"
+      - "C:/Windows/SysWOW64/wbem/"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/"
+      - "C:/Windows/SysWOW64/OpenSSH/"
+      - "C:/Program Files/dotnet/"
+      - "D:/WORK/Microsoft VS Code/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/21209/.local/bin/"
+      - "C:/Users/21209/AppData/Roaming/npm/"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/"
+      - "D:/WORK/CODO/memory_accessors-tensor/"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/"
+      - "C:/Program Files/bin/"
+      - "C:/Program Files/sbin/"
+      - "C:/Program Files/"
+      - "C:/Program Files (x86)/bin/"
+      - "C:/Program Files (x86)/sbin/"
+      - "C:/Program Files (x86)/"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/bin/"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/sbin/"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/"
+    searched_directories:
+      - "C:/Users/21209/miniconda3/rc.com"
+      - "C:/Users/21209/miniconda3/rc.exe"
+      - "C:/Users/21209/miniconda3/rc"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/rc.com"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/rc.exe"
+      - "C:/Users/21209/miniconda3/Library/mingw-w64/bin/rc"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/rc.com"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/rc.exe"
+      - "C:/Users/21209/miniconda3/Library/usr/bin/rc"
+      - "C:/Users/21209/miniconda3/Library/bin/rc.com"
+      - "C:/Users/21209/miniconda3/Library/bin/rc.exe"
+      - "C:/Users/21209/miniconda3/Library/bin/rc"
+      - "C:/Users/21209/miniconda3/Scripts/rc.com"
+      - "C:/Users/21209/miniconda3/Scripts/rc.exe"
+      - "C:/Users/21209/miniconda3/Scripts/rc"
+      - "C:/Users/21209/miniconda3/bin/rc.com"
+      - "C:/Users/21209/miniconda3/bin/rc.exe"
+      - "C:/Users/21209/miniconda3/bin/rc"
+      - "C:/Users/21209/miniconda3/condabin/rc.com"
+      - "C:/Users/21209/miniconda3/condabin/rc.exe"
+      - "C:/Users/21209/miniconda3/condabin/rc"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/rc.com"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/rc.exe"
+      - "C:/Users/21209/.codex/tmp/arg0/codex-arg0KeGCIv/rc"
+      - "D:/WORK/Microsoft VS Code/rc.com"
+      - "D:/WORK/Microsoft VS Code/rc.exe"
+      - "D:/WORK/Microsoft VS Code/rc"
+      - "C:/Windows/SysWOW64/rc.com"
+      - "C:/Windows/SysWOW64/rc.exe"
+      - "C:/Windows/SysWOW64/rc"
+      - "C:/Windows/rc.com"
+      - "C:/Windows/rc.exe"
+      - "C:/Windows/rc"
+      - "C:/Windows/SysWOW64/wbem/rc.com"
+      - "C:/Windows/SysWOW64/wbem/rc.exe"
+      - "C:/Windows/SysWOW64/wbem/rc"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/rc.com"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/rc.exe"
+      - "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/rc"
+      - "C:/Windows/SysWOW64/OpenSSH/rc.com"
+      - "C:/Windows/SysWOW64/OpenSSH/rc.exe"
+      - "C:/Windows/SysWOW64/OpenSSH/rc"
+      - "C:/Program Files/dotnet/rc.com"
+      - "C:/Program Files/dotnet/rc.exe"
+      - "C:/Program Files/dotnet/rc"
+      - "D:/WORK/Microsoft VS Code/bin/rc.com"
+      - "D:/WORK/Microsoft VS Code/bin/rc.exe"
+      - "D:/WORK/Microsoft VS Code/bin/rc"
+      - "C:/Program Files/Git/cmd/rc.com"
+      - "C:/Program Files/Git/cmd/rc.exe"
+      - "C:/Program Files/Git/cmd/rc"
+      - "C:/Program Files/nodejs/rc.com"
+      - "C:/Program Files/nodejs/rc.exe"
+      - "C:/Program Files/nodejs/rc"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/rc.com"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/rc.exe"
+      - "C:/Users/21209/AppData/Local/hermes/hermes-agent/venv/Scripts/rc"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/rc.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/rc.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WindowsApps/rc"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/rc.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/rc.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe/rc"
+      - "C:/Users/21209/.local/bin/rc.com"
+      - "C:/Users/21209/.local/bin/rc.exe"
+      - "C:/Users/21209/.local/bin/rc"
+      - "C:/Users/21209/AppData/Roaming/npm/rc.com"
+      - "C:/Users/21209/AppData/Roaming/npm/rc.exe"
+      - "C:/Users/21209/AppData/Roaming/npm/rc"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/rc.com"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/rc.exe"
+      - "D:/WORK/MiKTeX/miktex/bin/x64/rc"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/rc.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/rc.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe/ripgrep-15.1.0-x86_64-pc-windows-msvc/rc"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/rc.com"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/rc.exe"
+      - "C:/Users/21209/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/rc"
+      - "D:/WORK/CODO/memory_accessors-tensor/rc.com"
+      - "D:/WORK/CODO/memory_accessors-tensor/rc.exe"
+      - "D:/WORK/CODO/memory_accessors-tensor/rc"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/rc.com"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/rc.exe"
+      - "C:/Users/21209/.vscode/extensions/openai.chatgpt-26.519.32039-win32-x64/bin/windows-x86_64/rc"
+      - "C:/Program Files/bin/rc.com"
+      - "C:/Program Files/bin/rc.exe"
+      - "C:/Program Files/bin/rc"
+      - "C:/Program Files/sbin/rc.com"
+      - "C:/Program Files/sbin/rc.exe"
+      - "C:/Program Files/sbin/rc"
+      - "C:/Program Files/rc.com"
+      - "C:/Program Files/rc.exe"
+      - "C:/Program Files/rc"
+      - "C:/Program Files (x86)/bin/rc.com"
+      - "C:/Program Files (x86)/bin/rc.exe"
+      - "C:/Program Files (x86)/bin/rc"
+      - "C:/Program Files (x86)/sbin/rc.com"
+      - "C:/Program Files (x86)/sbin/rc.exe"
+      - "C:/Program Files (x86)/sbin/rc"
+      - "C:/Program Files (x86)/rc.com"
+      - "C:/Program Files (x86)/rc.exe"
+      - "C:/Program Files (x86)/rc"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/rc.com"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/rc.exe"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/rc"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/rc.com"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/rc.exe"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/rc"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/rc.com"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/rc.exe"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/rc"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/bin/rc.com"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/bin/rc.exe"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/bin/rc"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/sbin/rc.com"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/sbin/rc.exe"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/sbin/rc"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/rc.com"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/rc.exe"
+      - "C:/Program Files (x86)/sparse_dense_ttm_bench/rc"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\21209\\miniconda3"
+        - "C:\\Users\\21209\\miniconda3\\Library\\mingw-w64\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\usr\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Library\\bin"
+        - "C:\\Users\\21209\\miniconda3\\Scripts"
+        - "C:\\Users\\21209\\miniconda3\\bin"
+        - "C:\\Users\\21209\\miniconda3\\condabin"
+        - "C:\\Users\\21209\\.codex\\tmp\\arg0\\codex-arg0KeGCIv"
+        - "D:\\WORK\\Microsoft VS Code"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files\\dotnet"
+        - "D:\\WORK\\Microsoft VS Code\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Users\\21209\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\21209\\.local\\bin"
+        - "C:\\Users\\21209\\AppData\\Roaming\\npm"
+        - "D:\\WORK\\MiKTeX\\miktex\\bin\\x64"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe\\ripgrep-15.1.0-x86_64-pc-windows-msvc"
+        - "C:\\Users\\21209\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1.1-full_build\\bin"
+        - "."
+        - "c:\\Users\\21209\\.vscode\\extensions\\openai.chatgpt-26.519.32039-win32-x64\\bin\\windows-x86_64"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/sparse_dense_ttm_bench"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake"
+        - "C:/Program Files (x86)/sparse_dense_ttm_bench"
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:83 (try_compile)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-f9vb17"
+      binary: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-f9vb17"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-f9vb17'
+        
+        Run Build Command(s): "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_75771.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        閫傜敤浜?.NET Framework MSBuild 鐗堟湰 18.5.4+cb4e32d21
+        鐢熸垚鍚姩鏃堕棿涓?2026/5/24 21:12:06銆?
+        
+        鑺傜偣 1 涓婄殑椤圭洰鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-f9vb17\\cmTC_75771.vcxproj鈥?榛樿鐩爣)銆?
+        PrepareForBuild:
+          宸插惎鐢ㄧ粨鏋勫寲杈撳嚭銆傜紪璇戝櫒璇婃柇鐨勬牸寮忚缃皢鍙嶆槧閿欒灞傛缁撴瀯銆傛湁鍏宠缁嗕俊鎭紝璇峰弬闃?https://aka.ms/cpp/structured-output銆?
+          姝ｅ湪鍒涘缓鐩綍鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-f9vb17\\Debug\\鈥濄€?
+          姝ｅ湪鍒涘缓鐩綍鈥渃mTC_75771.dir\\Debug\\cmTC_75771.tlog\\鈥濄€?
+        InitializeBuildStatus:
+          姝ｅ湪鍒涘缓鈥渃mTC_75771.dir\\Debug\\cmTC_75771.tlog\\unsuccessfulbuild鈥濓紝鍥犱负宸叉寚瀹氣€淎lwaysCreate鈥濄€?
+          姝ｅ湪瀵光€渃mTC_75771.dir\\Debug\\cmTC_75771.tlog\\unsuccessfulbuild鈥濇墽琛?Touch 浠诲姟銆?
+        ClCompile:
+          C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /GR /Fo"cmTC_75771.dir\\Debug\\\\" /Fd"cmTC_75771.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-4.2\\Modules\\CMakeCXXCompilerABI.cpp"
+          鐢ㄤ簬 x64 鐨?Microsoft (R) C/C++ 浼樺寲缂栬瘧鍣?19.50.35729 鐗?
+          鐗堟潈鎵€鏈?C) Microsoft Corporation銆備繚鐣欐墍鏈夋潈鍒┿€?
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /GR /Fo"cmTC_75771.dir\\Debug\\\\" /Fd"cmTC_75771.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-4.2\\Modules\\CMakeCXXCompilerABI.cpp"
+          CMakeCXXCompilerABI.cpp
+        Link:
+          C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /OUT:"D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-f9vb17\\Debug\\cmTC_75771.exe" /INCREMENTAL /ILK:"cmTC_75771.dir\\Debug\\cmTC_75771.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-f9vb17/Debug/cmTC_75771.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-f9vb17/Debug/cmTC_75771.lib" /MACHINE:X64  /machine:x64 cmTC_75771.dir\\Debug\\CMakeCXXCompilerABI.obj
+          cmTC_75771.vcxproj -> D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-f9vb17\\Debug\\cmTC_75771.exe
+        FinalizeBuildStatus:
+          姝ｅ湪鍒犻櫎鏂囦欢鈥渃mTC_75771.dir\\Debug\\cmTC_75771.tlog\\unsuccessfulbuild鈥濄€?
+          姝ｅ湪瀵光€渃mTC_75771.dir\\Debug\\cmTC_75771.tlog\\cmTC_75771.lastbuildstate鈥濇墽琛?Touch 浠诲姟銆?
+        宸插畬鎴愮敓鎴愰」鐩€淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-f9vb17\\cmTC_75771.vcxproj鈥?榛樿鐩爣)鐨勬搷浣溿€?
+        
+        宸叉垚鍔熺敓鎴愩€?
+            0 涓鍛?
+            0 涓敊璇?
+        
+        宸茬敤鏃堕棿 00:00:00.40
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:253 (message)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        linker tool for 'CXX': C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/HostX64/x64/link.exe
+        implicit libs: []
+        implicit objs: []
+        implicit dirs: []
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/Internal/CMakeDetermineLinkerId.cmake:38 (message)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeDetermineCompilerABI.cmake:299 (cmake_determine_linker_id)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Running the CXX compiler's linker: "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/bin/HostX64/x64/link.exe" "-v"
+      Microsoft (R) Incremental Linker Version 14.50.35729.0
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake:104 (try_compile)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CheckCXXSourceCompiles.cmake:103 (cmake_check_source_compiles)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:162 (check_cxx_source_compiles)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:226 (_threads_check_libc)"
+      - "CMakeLists.txt:13 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-vkvnpp"
+      binary: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-vkvnpp"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-vkvnpp'
+        
+        Run Build Command(s): "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_b1e31.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        閫傜敤浜?.NET Framework MSBuild 鐗堟湰 18.5.4+cb4e32d21
+        MSBUILD : error MSB1009: 椤圭洰鏂囦欢涓嶅瓨鍦ㄣ€?
+        寮€鍏?cmTC_b1e31.vcxproj
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake:154 (try_compile)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:175 (check_library_exists)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:238 (_threads_check_lib)"
+      - "CMakeLists.txt:13 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthreads"
+    directories:
+      source: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-mgoqy0"
+      binary: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-mgoqy0"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREADS_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-mgoqy0'
+        
+        Run Build Command(s): "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_9000c.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        閫傜敤浜?.NET Framework MSBuild 鐗堟湰 18.5.4+cb4e32d21
+        MSBUILD : error MSB1009: 椤圭洰鏂囦欢涓嶅瓨鍦ㄣ€?
+        寮€鍏?cmTC_9000c.vcxproj
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake:154 (try_compile)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:175 (check_library_exists)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:239 (_threads_check_lib)"
+      - "CMakeLists.txt:13 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthread"
+    directories:
+      source: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-o93p45"
+      binary: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-o93p45"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREAD_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-o93p45'
+        
+        Run Build Command(s): "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_09e83.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        閫傜敤浜?.NET Framework MSBuild 鐗堟湰 18.5.4+cb4e32d21
+        MSBUILD : error MSB1009: 椤圭洰鏂囦欢涓嶅瓨鍦ㄣ€?
+        寮€鍏?cmTC_09e83.vcxproj
+        
+      exitCode: 1
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake:104 (try_compile)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CheckCXXSourceCompiles.cmake:103 (cmake_check_source_compiles)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:162 (check_cxx_source_compiles)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:226 (_threads_check_libc)"
+      - "CMakeLists.txt:13 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-v4emgn"
+      binary: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-v4emgn"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-v4emgn'
+        
+        Run Build Command(s): "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_af3f6.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        閫傜敤浜?.NET Framework MSBuild 鐗堟湰 18.5.4+cb4e32d21
+        鐢熸垚鍚姩鏃堕棿涓?2026/5/24 22:37:06銆?
+        
+        鑺傜偣 1 涓婄殑椤圭洰鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4emgn\\cmTC_af3f6.vcxproj鈥?榛樿鐩爣)銆?
+        PrepareForBuild:
+          宸插惎鐢ㄧ粨鏋勫寲杈撳嚭銆傜紪璇戝櫒璇婃柇鐨勬牸寮忚缃皢鍙嶆槧閿欒灞傛缁撴瀯銆傛湁鍏宠缁嗕俊鎭紝璇峰弬闃?https://aka.ms/cpp/structured-output銆?
+          姝ｅ湪鍒涘缓鐩綍鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4emgn\\Debug\\鈥濄€?
+          姝ｅ湪鍒涘缓鐩綍鈥渃mTC_af3f6.dir\\Debug\\cmTC_af3f6.tlog\\鈥濄€?
+        InitializeBuildStatus:
+          姝ｅ湪鍒涘缓鈥渃mTC_af3f6.dir\\Debug\\cmTC_af3f6.tlog\\unsuccessfulbuild鈥濓紝鍥犱负宸叉寚瀹氣€淎lwaysCreate鈥濄€?
+          姝ｅ湪瀵光€渃mTC_af3f6.dir\\Debug\\cmTC_af3f6.tlog\\unsuccessfulbuild鈥濇墽琛?Touch 浠诲姟銆?
+        ClCompile:
+          C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /GR /Fo"cmTC_af3f6.dir\\Debug\\\\" /Fd"cmTC_af3f6.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4emgn\\src.cxx"
+          鐢ㄤ簬 x64 鐨?Microsoft (R) C/C++ 浼樺寲缂栬瘧鍣?19.50.35729 鐗?
+          鐗堟潈鎵€鏈?C) Microsoft Corporation銆備繚鐣欐墍鏈夋潈鍒┿€?
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /GR /Fo"cmTC_af3f6.dir\\Debug\\\\" /Fd"cmTC_af3f6.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4emgn\\src.cxx"
+          src.cxx
+        D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4emgn\\src.cxx(1,10): error C1083: 鏃犳硶鎵撳紑鍖呮嫭鏂囦欢: 鈥減thread.h鈥? No such file or directory [D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4emgn\\cmTC_af3f6.vcxproj]
+        宸插畬鎴愮敓鎴愰」鐩€淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4emgn\\cmTC_af3f6.vcxproj鈥?榛樿鐩爣)鐨勬搷浣?- 澶辫触銆?
+        
+        鐢熸垚澶辫触銆?
+        
+        鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4emgn\\cmTC_af3f6.vcxproj鈥?榛樿鐩爣) (1) ->
+        (ClCompile 鐩爣) -> 
+          D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4emgn\\src.cxx(1,10): error C1083: 鏃犳硶鎵撳紑鍖呮嫭鏂囦欢: 鈥減thread.h鈥? No such file or directory [D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4emgn\\cmTC_af3f6.vcxproj]
+        
+            0 涓鍛?
+            1 涓敊璇?
+        
+        宸茬敤鏃堕棿 00:00:00.40
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake:154 (try_compile)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:175 (check_library_exists)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:238 (_threads_check_lib)"
+      - "CMakeLists.txt:13 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthreads"
+    directories:
+      source: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-ejvglw"
+      binary: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-ejvglw"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREADS_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-ejvglw'
+        
+        Run Build Command(s): "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_a3131.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        閫傜敤浜?.NET Framework MSBuild 鐗堟湰 18.5.4+cb4e32d21
+        鐢熸垚鍚姩鏃堕棿涓?2026/5/24 22:37:07銆?
+        
+        鑺傜偣 1 涓婄殑椤圭洰鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ejvglw\\cmTC_a3131.vcxproj鈥?榛樿鐩爣)銆?
+        PrepareForBuild:
+          宸插惎鐢ㄧ粨鏋勫寲杈撳嚭銆傜紪璇戝櫒璇婃柇鐨勬牸寮忚缃皢鍙嶆槧閿欒灞傛缁撴瀯銆傛湁鍏宠缁嗕俊鎭紝璇峰弬闃?https://aka.ms/cpp/structured-output銆?
+          姝ｅ湪鍒涘缓鐩綍鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ejvglw\\Debug\\鈥濄€?
+          姝ｅ湪鍒涘缓鐩綍鈥渃mTC_a3131.dir\\Debug\\cmTC_a3131.tlog\\鈥濄€?
+        InitializeBuildStatus:
+          姝ｅ湪鍒涘缓鈥渃mTC_a3131.dir\\Debug\\cmTC_a3131.tlog\\unsuccessfulbuild鈥濓紝鍥犱负宸叉寚瀹氣€淎lwaysCreate鈥濄€?
+          姝ｅ湪瀵光€渃mTC_a3131.dir\\Debug\\cmTC_a3131.tlog\\unsuccessfulbuild鈥濇墽琛?Touch 浠诲姟銆?
+        ClCompile:
+          C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /GR /Fo"cmTC_a3131.dir\\Debug\\\\" /Fd"cmTC_a3131.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ejvglw\\CheckFunctionExists.cxx"
+          鐢ㄤ簬 x64 鐨?Microsoft (R) C/C++ 浼樺寲缂栬瘧鍣?19.50.35729 鐗?
+          鐗堟潈鎵€鏈?C) Microsoft Corporation銆備繚鐣欐墍鏈夋潈鍒┿€?
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /GR /Fo"cmTC_a3131.dir\\Debug\\\\" /Fd"cmTC_a3131.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ejvglw\\CheckFunctionExists.cxx"
+          CheckFunctionExists.cxx
+        Link:
+          C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /OUT:"D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ejvglw\\Debug\\cmTC_a3131.exe" /INCREMENTAL /ILK:"cmTC_a3131.dir\\Debug\\cmTC_a3131.ilk" /NOLOGO pthreads.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-ejvglw/Debug/cmTC_a3131.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-ejvglw/Debug/cmTC_a3131.lib" /MACHINE:X64  /machine:x64 cmTC_a3131.dir\\Debug\\CheckFunctionExists.obj
+        LINK : fatal error LNK1104: 鏃犳硶鎵撳紑鏂囦欢鈥減threads.lib鈥?[D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ejvglw\\cmTC_a3131.vcxproj]
+        宸插畬鎴愮敓鎴愰」鐩€淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ejvglw\\cmTC_a3131.vcxproj鈥?榛樿鐩爣)鐨勬搷浣?- 澶辫触銆?
+        
+        鐢熸垚澶辫触銆?
+        
+        鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ejvglw\\cmTC_a3131.vcxproj鈥?榛樿鐩爣) (1) ->
+        (Link 鐩爣) -> 
+          LINK : fatal error LNK1104: 鏃犳硶鎵撳紑鏂囦欢鈥減threads.lib鈥?[D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ejvglw\\cmTC_a3131.vcxproj]
+        
+            0 涓鍛?
+            1 涓敊璇?
+        
+        宸茬敤鏃堕棿 00:00:00.32
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake:154 (try_compile)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:175 (check_library_exists)"
+      - "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.2/Modules/FindThreads.cmake:239 (_threads_check_lib)"
+      - "CMakeLists.txt:13 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthread"
+    directories:
+      source: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-grlqth"
+      binary: "D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-grlqth"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREAD_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-grlqth'
+        
+        Run Build Command(s): "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_7495f.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        閫傜敤浜?.NET Framework MSBuild 鐗堟湰 18.5.4+cb4e32d21
+        鐢熸垚鍚姩鏃堕棿涓?2026/5/24 22:37:07銆?
+        
+        鑺傜偣 1 涓婄殑椤圭洰鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-grlqth\\cmTC_7495f.vcxproj鈥?榛樿鐩爣)銆?
+        PrepareForBuild:
+          宸插惎鐢ㄧ粨鏋勫寲杈撳嚭銆傜紪璇戝櫒璇婃柇鐨勬牸寮忚缃皢鍙嶆槧閿欒灞傛缁撴瀯銆傛湁鍏宠缁嗕俊鎭紝璇峰弬闃?https://aka.ms/cpp/structured-output銆?
+          姝ｅ湪鍒涘缓鐩綍鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-grlqth\\Debug\\鈥濄€?
+          姝ｅ湪鍒涘缓鐩綍鈥渃mTC_7495f.dir\\Debug\\cmTC_7495f.tlog\\鈥濄€?
+        InitializeBuildStatus:
+          姝ｅ湪鍒涘缓鈥渃mTC_7495f.dir\\Debug\\cmTC_7495f.tlog\\unsuccessfulbuild鈥濓紝鍥犱负宸叉寚瀹氣€淎lwaysCreate鈥濄€?
+          姝ｅ湪瀵光€渃mTC_7495f.dir\\Debug\\cmTC_7495f.tlog\\unsuccessfulbuild鈥濇墽琛?Touch 浠诲姟銆?
+        ClCompile:
+          C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /GR /Fo"cmTC_7495f.dir\\Debug\\\\" /Fd"cmTC_7495f.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-grlqth\\CheckFunctionExists.cxx"
+          鐢ㄤ簬 x64 鐨?Microsoft (R) C/C++ 浼樺寲缂栬瘧鍣?19.50.35729 鐗?
+          鐗堟潈鎵€鏈?C) Microsoft Corporation銆備繚鐣欐墍鏈夋潈鍒┿€?
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /GR /Fo"cmTC_7495f.dir\\Debug\\\\" /Fd"cmTC_7495f.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-grlqth\\CheckFunctionExists.cxx"
+          CheckFunctionExists.cxx
+        Link:
+          C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /OUT:"D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-grlqth\\Debug\\cmTC_7495f.exe" /INCREMENTAL /ILK:"cmTC_7495f.dir\\Debug\\cmTC_7495f.ilk" /NOLOGO pthread.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-grlqth/Debug/cmTC_7495f.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/CMakeScratch/TryCompile-grlqth/Debug/cmTC_7495f.lib" /MACHINE:X64  /machine:x64 cmTC_7495f.dir\\Debug\\CheckFunctionExists.obj
+        LINK : fatal error LNK1104: 鏃犳硶鎵撳紑鏂囦欢鈥減thread.lib鈥?[D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-grlqth\\cmTC_7495f.vcxproj]
+        宸插畬鎴愮敓鎴愰」鐩€淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-grlqth\\cmTC_7495f.vcxproj鈥?榛樿鐩爣)鐨勬搷浣?- 澶辫触銆?
+        
+        鐢熸垚澶辫触銆?
+        
+        鈥淒:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-grlqth\\cmTC_7495f.vcxproj鈥?榛樿鐩爣) (1) ->
+        (Link 鐩爣) -> 
+          LINK : fatal error LNK1104: 鏃犳硶鎵撳紑鏂囦欢鈥減thread.lib鈥?[D:\\WORK\\CODO\\memory_accessors-tensor\\build\\CMakeFiles\\CMakeScratch\\TryCompile-grlqth\\cmTC_7495f.vcxproj]
+        
+            0 涓鍛?
+            1 涓敊璇?
+        
+        宸茬敤鏃堕棿 00:00:00.30
+        
+      exitCode: 1
+...

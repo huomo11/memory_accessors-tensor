@@ -1,0 +1,3 @@
+D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/ttm_bench.dir
+D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/ALL_BUILD.dir
+D:/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/ZERO_CHECK.dir
