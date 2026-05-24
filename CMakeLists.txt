@@ -1,17 +1,20 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.10)
 
-project(sparse_dense_ttm_bench LANGUAGES CXX)
+project(memory_accessors_tensor LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+add_executable(ttm_bench src/main.cpp)
 
-add_executable(ttm_bench
-    src/main.cpp
+set_target_properties(ttm_bench PROPERTIES
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
 )
 
+find_package(Threads REQUIRED)
+target_link_libraries(ttm_bench PRIVATE Threads::Threads)
+
 if(MSVC)
-    target_compile_options(ttm_bench PRIVATE /O2 /permissive-)
+    target_compile_options(ttm_bench PRIVATE /O2 /W4)
 else()
-    target_compile_options(ttm_bench PRIVATE -O3 -march=native -Wall -Wextra -Wpedantic)
+    target_compile_options(ttm_bench PRIVATE -std=c++11 -O3 -march=native -Wall -Wextra -Wpedantic)
 endif()

@@ -14,6 +14,7 @@
 #include <random>
 #include <sstream>
 #include <stdexcept>
+#include <stdint.h>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -32,28 +33,28 @@ struct Args {
     std::vector<std::size_t> ranks{16, 32, 64};
     int repeats = 3;
     int threads = static_cast<int>(std::max(1u, std::thread::hardware_concurrency()));
-    std::uint64_t seed = 42;
+    uint64_t seed = 42;
     std::string output = "results.csv";
 };
 
 struct TensorCOO {
-    std::vector<std::uint32_t> i0;
-    std::vector<std::uint32_t> i1;
-    std::vector<std::uint32_t> i2;
+    std::vector<uint32_t> i0;
+    std::vector<uint32_t> i1;
+    std::vector<uint32_t> i2;
     std::vector<double> values64;
     std::vector<float> values32;
 };
 
 struct PreparedEntry {
-    std::uint64_t row = 0;
-    std::uint32_t k = 0;
+    uint64_t row = 0;
+    uint32_t k = 0;
     std::size_t nz = 0;
 };
 
 struct Prepared {
     std::vector<PreparedEntry> entries;
     std::vector<std::size_t> row_starts;
-    std::vector<std::uint64_t> rows;
+    std::vector<uint64_t> rows;
     std::size_t row_count = 0;
     double format_prepare_ms = 0.0;
 };
@@ -112,10 +113,41 @@ std::vector<std::string> split(const std::string& s, const char delim) {
     return out;
 }
 
-std::vector<std::size_t> parse_size_list(const std::string& text) {
+static unsigned long long parse_ull_arg(const std::string& s, const std::string& name) {
+    if (!s.empty() && s[0] == '-') {
+        throw std::runtime_error("Invalid unsigned integer for " + name + ": " + s);
+    }
+
+    char* end = nullptr;
+    errno = 0;
+    const unsigned long long value = std::strtoull(s.c_str(), &end, 10);
+
+    if (errno != 0 || end == s.c_str() || *end != '\0') {
+        throw std::runtime_error("Invalid unsigned integer for " + name + ": " + s);
+    }
+    return value;
+}
+
+static std::size_t parse_size_arg(const std::string& s, const std::string& name) {
+    const unsigned long long value = parse_ull_arg(s, name);
+    if (value > static_cast<unsigned long long>(std::numeric_limits<std::size_t>::max())) {
+        throw std::runtime_error("Integer out of range for " + name + ": " + s);
+    }
+    return static_cast<std::size_t>(value);
+}
+
+static uint64_t parse_uint64_arg(const std::string& s, const std::string& name) {
+    const unsigned long long value = parse_ull_arg(s, name);
+    if (value > static_cast<unsigned long long>(std::numeric_limits<uint64_t>::max())) {
+        throw std::runtime_error("Integer out of range for " + name + ": " + s);
+    }
+    return static_cast<uint64_t>(value);
+}
+
+std::vector<std::size_t> parse_size_list(const std::string& text, const std::string& name) {
     std::vector<std::size_t> out;
     for (const auto& part : split(text, ',')) {
-        out.push_back(static_cast<std::size_t>(std::stoull(part)));
+        out.push_back(parse_size_arg(part, name));
     }
     if (out.empty()) {
         throw std::runtime_error("empty integer list: " + text);
@@ -161,7 +193,7 @@ Args parse_args(int argc, char** argv) {
         };
 
         if (key == "--dims") {
-            const auto dims = parse_size_list(need_value(key));
+            const auto dims = parse_size_list(need_value(key), key);
             if (dims.size() != 3) {
                 throw std::runtime_error("--dims expects exactly three comma-separated dimensions");
             }
@@ -169,9 +201,9 @@ Args parse_args(int argc, char** argv) {
             args.dim1 = dims[1];
             args.dim2 = dims[2];
         } else if (key == "--nnz") {
-            args.nnz = static_cast<std::size_t>(std::stoull(need_value(key)));
+            args.nnz = parse_size_arg(need_value(key), key);
         } else if (key == "--ranks") {
-            args.ranks = parse_size_list(need_value(key));
+            args.ranks = parse_size_list(need_value(key), key);
         } else if (key == "--modes") {
             args.modes = parse_int_list(need_value(key), key);
         } else if (key == "--threads") {
@@ -179,7 +211,7 @@ Args parse_args(int argc, char** argv) {
         } else if (key == "--repeats") {
             args.repeats = std::max(1, parse_int_arg(need_value(key), key));
         } else if (key == "--seed") {
-            args.seed = static_cast<std::uint64_t>(std::stoull(need_value(key)));
+            args.seed = parse_uint64_arg(need_value(key), key);
         } else if (key == "--output") {
             args.output = need_value(key);
         } else if (key == "--help" || key == "-h") {
@@ -247,9 +279,9 @@ TensorCOO generate_tensor(const Args& args) {
     tensor.values32.resize(args.nnz);
 
     std::mt19937_64 rng(args.seed);
-    std::uniform_int_distribution<std::uint32_t> d0(0, static_cast<std::uint32_t>(args.dim0 - 1));
-    std::uniform_int_distribution<std::uint32_t> d1(0, static_cast<std::uint32_t>(args.dim1 - 1));
-    std::uniform_int_distribution<std::uint32_t> d2(0, static_cast<std::uint32_t>(args.dim2 - 1));
+    std::uniform_int_distribution<uint32_t> d0(0, static_cast<uint32_t>(args.dim0 - 1));
+    std::uniform_int_distribution<uint32_t> d1(0, static_cast<uint32_t>(args.dim1 - 1));
+    std::uniform_int_distribution<uint32_t> d2(0, static_cast<uint32_t>(args.dim2 - 1));
     std::uniform_real_distribution<double> value_dist(-1.0, 1.0);
 
     for (std::size_t nz = 0; nz < args.nnz; ++nz) {
@@ -262,7 +294,7 @@ TensorCOO generate_tensor(const Args& args) {
     return tensor;
 }
 
-std::vector<double> generate_factor64(const std::size_t dim, const std::size_t rank, const std::uint64_t seed) {
+std::vector<double> generate_factor64(const std::size_t dim, const std::size_t rank, const uint64_t seed) {
     std::vector<double> factor(dim * rank);
     std::mt19937_64 rng(seed);
     std::normal_distribution<double> dist(0.0, 1.0 / std::sqrt(static_cast<double>(rank)));
@@ -280,17 +312,17 @@ std::vector<float> to_float(const std::vector<double>& input) {
     return output;
 }
 
-std::uint64_t output_row(const TensorCOO& tensor, const Args& args, const int mode, const std::size_t nz) {
+uint64_t output_row(const TensorCOO& tensor, const Args& args, const int mode, const std::size_t nz) {
     if (mode == 0) {
-        return static_cast<std::uint64_t>(tensor.i1[nz]) * args.dim2 + tensor.i2[nz];
+        return static_cast<uint64_t>(tensor.i1[nz]) * args.dim2 + tensor.i2[nz];
     }
     if (mode == 1) {
-        return static_cast<std::uint64_t>(tensor.i0[nz]) * args.dim2 + tensor.i2[nz];
+        return static_cast<uint64_t>(tensor.i0[nz]) * args.dim2 + tensor.i2[nz];
     }
-    return static_cast<std::uint64_t>(tensor.i0[nz]) * args.dim1 + tensor.i1[nz];
+    return static_cast<uint64_t>(tensor.i0[nz]) * args.dim1 + tensor.i1[nz];
 }
 
-std::uint32_t mode_index(const TensorCOO& tensor, const int mode, const std::size_t nz) {
+uint32_t mode_index(const TensorCOO& tensor, const int mode, const std::size_t nz) {
     if (mode == 0) {
         return tensor.i0[nz];
     }
@@ -354,7 +386,7 @@ void compute_rows(
 
     auto worker = [&](const std::size_t begin_row_idx, const std::size_t end_row_idx) {
         for (std::size_t row_idx = begin_row_idx; row_idx < end_row_idx; ++row_idx) {
-            const std::uint64_t row = prepared.rows[row_idx];
+            const uint64_t row = prepared.rows[row_idx];
             AccumT* out = output.data() + static_cast<std::size_t>(row) * rank;
             const std::size_t begin = prepared.row_starts[row_idx];
             const std::size_t end = prepared.row_starts[row_idx + 1];
@@ -453,11 +485,11 @@ Metrics run_variant(
 
     Metrics m;
     m.format_prepare_ms = prepared.format_prepare_ms;
-    m.index_storage_bytes = args.nnz * 3 * sizeof(std::uint32_t);
+    m.index_storage_bytes = args.nnz * 3 * sizeof(uint32_t);
     m.value_storage_bytes = args.nnz * value_type_bytes;
     m.factor_storage_bytes = factor_dim * rank * factor_type_bytes;
     m.output_storage_bytes = output_size * output_type_bytes;
-    m.index_logical_read_bytes = args.nnz * 3 * sizeof(std::uint32_t);
+    m.index_logical_read_bytes = args.nnz * 3 * sizeof(uint32_t);
     m.value_logical_read_bytes = args.nnz * value_type_bytes;
     m.factor_logical_read_bytes = args.nnz * rank * factor_type_bytes;
     m.output_logical_write_bytes = std::max(m.output_storage_bytes, args.nnz * rank * output_type_bytes);
@@ -528,8 +560,9 @@ void write_csv_row(
         << m.value_logical_read_bytes << ','
         << m.factor_logical_read_bytes << ','
         << m.output_logical_write_bytes << ','
-        << std::scientific << m.rel_error << std::defaultfloat << ','
-        << rank << ','
+        << std::scientific << m.rel_error << ',';
+    out.unsetf(std::ios_base::floatfield);
+    out << rank << ','
         << args.nnz << ','
         << mode << ','
         << args.threads << ','
@@ -554,7 +587,7 @@ int main(int argc, char** argv) {
             {"value_fp32_factor_fp64_compute_fp64", FactorStorage::Fp64, ValueStorage::Fp32, ComputeType::Fp64},
         };
 
-        std::ofstream out(args.output);
+        std::ofstream out(args.output.c_str());
         if (!out) {
             throw std::runtime_error("failed to open output file: " + args.output);
         }
