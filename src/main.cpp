@@ -1,8 +1,11 @@
 #include <algorithm>
+#include <cerrno>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
+#include <exception>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -120,10 +123,25 @@ std::vector<std::size_t> parse_size_list(const std::string& text) {
     return out;
 }
 
-std::vector<int> parse_int_list(const std::string& text) {
+static int parse_int_arg(const std::string& s, const std::string& name) {
+    char* end = nullptr;
+    errno = 0;
+    const long value = std::strtol(s.c_str(), &end, 10);
+
+    if (errno != 0 || end == s.c_str() || *end != '\0') {
+        throw std::runtime_error("Invalid integer for " + name + ": " + s);
+    }
+    if (value < std::numeric_limits<int>::min() ||
+        value > std::numeric_limits<int>::max()) {
+        throw std::runtime_error("Integer out of range for " + name + ": " + s);
+    }
+    return static_cast<int>(value);
+}
+
+std::vector<int> parse_int_list(const std::string& text, const std::string& name) {
     std::vector<int> out;
     for (const auto& part : split(text, ',')) {
-        out.push_back(std::stoi(part));
+        out.push_back(parse_int_arg(part, name));
     }
     if (out.empty()) {
         throw std::runtime_error("empty integer list: " + text);
@@ -155,11 +173,11 @@ Args parse_args(int argc, char** argv) {
         } else if (key == "--ranks") {
             args.ranks = parse_size_list(need_value(key));
         } else if (key == "--modes") {
-            args.modes = parse_int_list(need_value(key));
+            args.modes = parse_int_list(need_value(key), key);
         } else if (key == "--threads") {
-            args.threads = std::max(1, std::stoi(need_value(key)));
+            args.threads = std::max(1, parse_int_arg(need_value(key), key));
         } else if (key == "--repeats") {
-            args.repeats = std::max(1, std::stoi(need_value(key)));
+            args.repeats = std::max(1, parse_int_arg(need_value(key), key));
         } else if (key == "--seed") {
             args.seed = static_cast<std::uint64_t>(std::stoull(need_value(key)));
         } else if (key == "--output") {
