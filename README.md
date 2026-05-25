@@ -14,6 +14,7 @@ Stage 1 uses a global-upcast prototype:
 
 - sparse tensor/core stays sparse;
 - `factor_fp32_compute_fp64` stores factors in fp32, upcasts the whole factor to fp64 workspace, and computes in fp64;
+- `factor_fp32_onfly_compute_fp64` stores factors in fp32 and casts each factor element to fp64 directly in the compute loop;
 - `value_fp32_factor_fp64_compute_fp64` stores sparse values in fp32, upcasts values to fp64 workspace, and computes in fp64.
 
 Later stages will replace global upcast with block-wise factor accessors.
@@ -95,15 +96,18 @@ python3 scripts/plot_kernel_results.py results/pilot_rank.csv --out-dir results/
 Generated SVGs:
 
 - `rank_vs_total_ms.svg`
+- `rank_vs_kernel_ms.svg`
+- `rank_vs_compute_ms.svg`
 - `rank_vs_rel_error.svg`
-- `rank_vs_traffic_breakdown.svg`
+- `rank_vs_compute_traffic_breakdown.svg`
 - `variant_vs_phase_time.svg`
-- `threads_vs_speedup.svg`
 
 ## CSV Fields
 
 Fixed schema:
 
-`total_ms, format_prepare_ms, upcast_prepare_ms, compute_ms, index_storage_bytes, value_storage_bytes, factor_storage_bytes, output_storage_bytes, index_logical_read_bytes, value_logical_read_bytes, factor_logical_read_bytes, output_logical_write_bytes, rel_error, rank, nnz, mode, thread_count, seed, variant, dim0, dim1, dim2, repeat`
+`total_ms, format_prepare_ms, upcast_prepare_ms, compute_ms, kernel_ms, index_storage_bytes, value_storage_bytes, factor_storage_bytes, output_storage_bytes, index_logical_read_bytes, value_logical_read_bytes, factor_logical_read_bytes, factor_compute_logical_read_bytes, output_logical_write_bytes, rel_error, rank, nnz, mode, thread_count, seed, variant, dim0, dim1, dim2, repeat`
 
-`format_prepare_ms` measures mode-wise COO sorting and row-start construction. `upcast_prepare_ms` measures fp32 storage to fp64 workspace conversion. `compute_ms` measures the core sparse-dense TTM loop. `total_ms` is the sum of those three phase times.
+`format_prepare_ms` measures mode-wise COO sorting and row-start construction. `upcast_prepare_ms` measures fp32 storage to fp64 workspace conversion. `compute_ms` measures the core sparse-dense TTM loop. `kernel_ms = upcast_prepare_ms + compute_ms`. `total_ms` remains `format_prepare_ms + upcast_prepare_ms + compute_ms`.
+
+`factor_logical_read_bytes` is the storage-side factor traffic estimate. `factor_compute_logical_read_bytes` is the compute-side estimate: global-upcast fp32/fp64 compute reads fp64 workspace, while on-the-fly fp32/fp64 compute reads fp32 factor storage directly.

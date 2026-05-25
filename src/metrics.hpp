@@ -11,6 +11,7 @@ struct MetricsRow {
     double format_prepare_ms;
     double upcast_prepare_ms;
     double compute_ms;
+    double kernel_ms;
     uint64_t index_storage_bytes;
     uint64_t value_storage_bytes;
     uint64_t factor_storage_bytes;
@@ -18,6 +19,7 @@ struct MetricsRow {
     uint64_t index_logical_read_bytes;
     uint64_t value_logical_read_bytes;
     uint64_t factor_logical_read_bytes;
+    uint64_t factor_compute_logical_read_bytes;
     uint64_t output_logical_write_bytes;
     double rel_error;
     int rank;
@@ -33,10 +35,11 @@ struct MetricsRow {
 
     MetricsRow()
         : total_ms(0.0), format_prepare_ms(0.0), upcast_prepare_ms(0.0),
-          compute_ms(0.0), index_storage_bytes(0), value_storage_bytes(0),
+          compute_ms(0.0), kernel_ms(0.0), index_storage_bytes(0), value_storage_bytes(0),
           factor_storage_bytes(0), output_storage_bytes(0),
           index_logical_read_bytes(0), value_logical_read_bytes(0),
-          factor_logical_read_bytes(0), output_logical_write_bytes(0),
+          factor_logical_read_bytes(0), factor_compute_logical_read_bytes(0),
+          output_logical_write_bytes(0),
           rel_error(0.0), rank(0), nnz(0), mode(0), thread_count(1),
           seed(0), variant(""), dim0(0), dim1(0), dim2(0), repeat(0) {}
 };

@@ -10,6 +10,8 @@ import sys
 COLORS = {
     "factor_fp64_compute_fp64": "#1f77b4",
     "factor_fp32_compute_fp64": "#2ca02c",
+    "factor_fp32_global_upcast_compute_fp64": "#2ca02c",
+    "factor_fp32_onfly_compute_fp64": "#17becf",
     "factor_fp32_compute_fp32": "#d62728",
     "value_fp32_factor_fp64_compute_fp64": "#9467bd",
 }
@@ -29,6 +31,14 @@ def median(values):
 def load_rows(path):
     with open(path, "r", newline="") as f:
         return list(csv.DictReader(f))
+
+
+def get_float(row, key):
+    if key == "kernel_ms" and key not in row:
+        return float(row["upcast_prepare_ms"]) + float(row["compute_ms"])
+    if key == "factor_compute_logical_read_bytes" and key not in row:
+        return float(row["factor_logical_read_bytes"])
+    return float(row[key])
 
 
 def ensure_dir(path):
@@ -60,8 +70,8 @@ def scale(v, vmin, vmax, omin, omax):
 def grouped_median(rows, x_key, y_key):
     data = {}
     for r in rows:
-        key = (r["variant"], float(r[x_key]))
-        data.setdefault(key, []).append(float(r[y_key]))
+        key = (r["variant"], get_float(r, x_key))
+        data.setdefault(key, []).append(get_float(r, y_key))
     out = {}
     for key, vals in data.items():
         out.setdefault(key[0], []).append((key[1], median(vals)))
@@ -116,19 +126,19 @@ def line_plot(rows, out_path, x_key, y_key, title, y_label):
     write_svg(out_path, lines)
 
 
-def traffic_breakdown(rows, out_path):
+def compute_traffic_breakdown(rows, out_path):
     data = {}
     for r in rows:
-        key = (float(r["rank"]), r["variant"])
-        idx = float(r["index_logical_read_bytes"])
-        val = float(r["value_logical_read_bytes"])
-        fac = float(r["factor_logical_read_bytes"])
+        key = (get_float(r, "rank"), r["variant"])
+        idx = get_float(r, "index_logical_read_bytes")
+        val = get_float(r, "value_logical_read_bytes")
+        fac = get_float(r, "factor_compute_logical_read_bytes")
         data.setdefault(key, []).append((idx, val, fac))
     ranks = sorted(set(k[0] for k in data))
     variants = sorted(set(k[1] for k in data))
     w, h = 900, 480
     lines = svg_begin(w, h)
-    lines.append('<text class="title" x="50" y="28">rank_vs_traffic_breakdown</text>')
+    lines.append('<text class="title" x="50" y="28">rank_vs_compute_traffic_breakdown</text>')
     x = 70
     bar_w = 14
     gap = 8
@@ -153,14 +163,14 @@ def traffic_breakdown(rows, out_path):
                 lines.append('<rect x="%d" y="%.2f" width="%d" height="%.2f" fill="%s"/>' % (x, y, bar_w, height, color))
             x += bar_w + gap
         x += 22
-    lines.append('<text x="650" y="70">stack: index, value, factor</text>')
+    lines.append('<text x="610" y="70">stack: index, value, factor compute reads</text>')
     lines.extend(svg_end())
     write_svg(out_path, lines)
 
 
 def phase_time(rows, out_path):
     variants = sorted(set(r["variant"] for r in rows))
-    w, h = 860, 460
+    w, h = 1100, 500
     lines = svg_begin(w, h)
     lines.append('<text class="title" x="50" y="28">variant_vs_phase_time</text>')
     phases = ["format_prepare_ms", "upcast_prepare_ms", "compute_ms"]
@@ -169,19 +179,20 @@ def phase_time(rows, out_path):
     max_total = 1.0
     for v in variants:
         group = [r for r in rows if r["variant"] == v]
-        vals = [median([float(r[p]) for r in group]) for p in phases]
+        vals = [median([get_float(r, p) for r in group]) for p in phases]
         totals[v] = vals
         max_total = max(max_total, sum(vals))
-    x = 70
+    x = 60
+    step = 190
     for v in variants:
-        y = 390
+        y = 410
         for val, color in zip(totals[v], colors):
-            height = val / max_total * 320.0
+            height = val / max_total * 330.0
             y -= height
             lines.append('<rect x="%d" y="%.2f" width="80" height="%.2f" fill="%s"/>' % (x, y, height, color))
-        lines.append('<text transform="translate(%d,420) rotate(35)">%s</text>' % (x, v))
-        x += 180
-    lines.append('<text x="610" y="70">gray=format, yellow=upcast, green=compute</text>')
+        lines.append('<text transform="translate(%d,445) rotate(35)">%s</text>' % (x, v))
+        x += step
+    lines.append('<text x="760" y="70">gray=format, yellow=upcast, green=compute</text>')
     lines.extend(svg_end())
     write_svg(out_path, lines)
 
@@ -192,7 +203,7 @@ def threads_speedup(rows, out_path):
         return
     by_thread = {}
     for r in base:
-        by_thread.setdefault(float(r["thread_count"]), []).append(float(r["compute_ms"]))
+        by_thread.setdefault(get_float(r, "thread_count"), []).append(get_float(r, "compute_ms"))
     if not by_thread:
         return
     baseline_thread = min(by_thread)
@@ -221,8 +232,10 @@ def main():
     ensure_dir(out_dir)
     rows = load_rows(path)
     line_plot(rows, os.path.join(out_dir, "rank_vs_total_ms.svg"), "rank", "total_ms", "rank_vs_total_ms", "total_ms")
+    line_plot(rows, os.path.join(out_dir, "rank_vs_kernel_ms.svg"), "rank", "kernel_ms", "rank_vs_kernel_ms", "kernel_ms")
+    line_plot(rows, os.path.join(out_dir, "rank_vs_compute_ms.svg"), "rank", "compute_ms", "rank_vs_compute_ms", "compute_ms")
     line_plot(rows, os.path.join(out_dir, "rank_vs_rel_error.svg"), "rank", "rel_error", "rank_vs_rel_error", "rel_error")
-    traffic_breakdown(rows, os.path.join(out_dir, "rank_vs_traffic_breakdown.svg"))
+    compute_traffic_breakdown(rows, os.path.join(out_dir, "rank_vs_compute_traffic_breakdown.svg"))
     phase_time(rows, os.path.join(out_dir, "variant_vs_phase_time.svg"))
     threads_speedup(rows, os.path.join(out_dir, "threads_vs_speedup.svg"))
     print("wrote SVG plots to %s" % out_dir)

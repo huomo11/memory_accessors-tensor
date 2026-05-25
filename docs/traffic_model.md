@@ -34,7 +34,10 @@ Stage 1 reports:
 index_logical_read_bytes = nnz * 3 * sizeof(uint32_t)
 value_logical_read_bytes = nnz * sizeof(value_storage_type)
 factor_logical_read_bytes = nnz * rank * sizeof(factor_storage_type)
+factor_compute_logical_read_bytes = nnz * rank * sizeof(factor_compute_read_type)
 output_logical_write_bytes = max(output_storage_bytes, nnz * rank * sizeof(output_type))
 ```
 
-The current implementation is a global-upcast prototype. Stage 2 will measure block-wise factor accessor traffic more directly.
+The Stage 1.5 benchmark separates storage-side factor traffic from compute-side factor traffic. The global-upcast fp32/fp64 variant stores fp32 factors but computes from a whole fp64 workspace, so its compute-side factor reads are fp64. The on-the-fly fp32/fp64 variant reads fp32 factors in the compute loop and casts each element to double before multiply-add.
+
+Stage 2 will measure block-wise factor accessor traffic more directly.

@@ -238,6 +238,7 @@ static MetricsRow make_metric_base(const Options& opt, const PreparedTTM& prep,
     uint64_t factor_elems = (uint64_t)prep.factor_rows * (uint64_t)rank;
     size_t value_size = variant_value_storage_size(variant);
     size_t factor_size = variant_factor_storage_size(variant);
+    size_t factor_compute_size = variant_factor_compute_read_size(variant);
     size_t output_size = variant_output_storage_size(variant);
 
     row.format_prepare_ms = format_ms;
@@ -248,6 +249,8 @@ static MetricsRow make_metric_base(const Options& opt, const PreparedTTM& prep,
     row.index_logical_read_bytes = nnz * 3ULL * (uint64_t)sizeof(uint32_t);
     row.value_logical_read_bytes = nnz * (uint64_t)value_size;
     row.factor_logical_read_bytes = nnz * (uint64_t)rank * (uint64_t)factor_size;
+    row.factor_compute_logical_read_bytes =
+        nnz * (uint64_t)rank * (uint64_t)factor_compute_size;
     {
         uint64_t streamed = nnz * (uint64_t)rank * (uint64_t)output_size;
         row.output_logical_write_bytes = row.output_storage_bytes > streamed
@@ -295,6 +298,13 @@ static MetricsRow run_variant(const Options& opt,
         compute_ttm_threaded<double, double, double>(prep, values64, factor_workspace,
                                                      (size_t)rank, opt.active_threads, &out64);
         row.compute_ms = timer.elapsed_ms();
+    } else if (variant == VAR_FACTOR_FP32_ONFLY_COMPUTE_FP64) {
+        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
+        row.upcast_prepare_ms = 0.0;
+        timer.reset();
+        compute_ttm_threaded<double, float, double>(prep, values64, factor32,
+                                                    (size_t)rank, opt.active_threads, &out64);
+        row.compute_ms = timer.elapsed_ms();
     } else if (variant == VAR_FACTOR_FP32_COMPUTE_FP32) {
         DenseMatrix<float> factor32 = convert_factor<float>(factor64);
         std::vector<float> values32 = convert_values<float>(values64);
@@ -316,7 +326,8 @@ static MetricsRow run_variant(const Options& opt,
         row.compute_ms = timer.elapsed_ms();
     }
 
-    row.total_ms = row.format_prepare_ms + row.upcast_prepare_ms + row.compute_ms;
+    row.kernel_ms = row.upcast_prepare_ms + row.compute_ms;
+    row.total_ms = row.format_prepare_ms + row.kernel_ms;
     if (variant == VAR_FACTOR_FP64_COMPUTE_FP64) {
         row.rel_error = 0.0;
     } else {
@@ -383,16 +394,18 @@ int main(int argc, char** argv) {
                                                            rank, mode, rep, format_ms);
                         base.compute_ms = baseline_compute_ms;
                         base.upcast_prepare_ms = 0.0;
-                        base.total_ms = base.format_prepare_ms + base.compute_ms;
+                        base.kernel_ms = base.upcast_prepare_ms + base.compute_ms;
+                        base.total_ms = base.format_prepare_ms + base.kernel_ms;
                         base.rel_error = 0.0;
                         csv.write(base);
 
-                        VariantKind vars[3];
+                        VariantKind vars[4];
                         vars[0] = VAR_FACTOR_FP32_COMPUTE_FP64;
-                        vars[1] = VAR_FACTOR_FP32_COMPUTE_FP32;
-                        vars[2] = VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64;
+                        vars[1] = VAR_FACTOR_FP32_ONFLY_COMPUTE_FP64;
+                        vars[2] = VAR_FACTOR_FP32_COMPUTE_FP32;
+                        vars[3] = VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64;
                         int vi;
-                        for (vi = 0; vi < 3; ++vi) {
+                        for (vi = 0; vi < 4; ++vi) {
                             MetricsRow row = run_variant(opt, prep, format_ms, values64, factor64,
                                                          vars[vi], rank, mode, rep, baseline);
                             csv.write(row);
