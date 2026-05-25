@@ -33,6 +33,8 @@ struct MetricsRow {
     uint32_t dim1;
     uint32_t dim2;
     uint32_t tile_rows;
+    const char* layout;
+    uint32_t output_block_rows;
     int repeat;
 
     MetricsRow()
@@ -44,7 +46,7 @@ struct MetricsRow {
           tile_workspace_bytes(0), output_logical_write_bytes(0),
           rel_error(0.0), rank(0), nnz(0), mode(0), thread_count(1),
           seed(0), variant(""), dim0(0), dim1(0), dim2(0), tile_rows(64),
-          repeat(0) {}
+          layout("output_row"), output_block_rows(64), repeat(0) {}
 };
 
 inline double relative_frobenius_error(const std::vector<double>& y,

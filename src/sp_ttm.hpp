@@ -21,17 +21,33 @@ struct PreparedEntry {
         : output_row(out), factor_row(factor), source_index(src) {}
 };
 
+struct PreparedBlockRange {
+    uint32_t output_block_id;
+    uint32_t factor_tile_id;
+    size_t start;
+    size_t end;
+
+    PreparedBlockRange() : output_block_id(0), factor_tile_id(0), start(0), end(0) {}
+    PreparedBlockRange(uint32_t ob, uint32_t ft, size_t s, size_t e)
+        : output_block_id(ob), factor_tile_id(ft), start(s), end(e) {}
+};
+
 struct PreparedTTM {
     int mode;
     uint32_t output_rows;
     uint32_t factor_rows;
     uint32_t tile_rows;
+    uint32_t output_block_rows;
     std::vector<PreparedEntry> entries;
     std::vector<size_t> row_starts;
     std::vector<PreparedEntry> factor_entries;
     std::vector<size_t> tile_starts;
+    std::vector<PreparedEntry> entries_2d;
+    std::vector<PreparedBlockRange> block_ranges_2d;
 
-    PreparedTTM() : mode(0), output_rows(0), factor_rows(0), tile_rows(64) {}
+    PreparedTTM()
+        : mode(0), output_rows(0), factor_rows(0),
+          tile_rows(64), output_block_rows(64) {}
 };
 
 inline uint32_t ttm_output_rows(const SparseTensorCOO& x, int mode) {
@@ -82,12 +98,40 @@ inline bool prepared_entry_factor_less(const PreparedEntry& a, const PreparedEnt
     return a.output_row < b.output_row;
 }
 
-inline PreparedTTM prepare_ttm(const SparseTensorCOO& x, int mode, uint32_t tile_rows) {
+struct PreparedEntry2DLess {
+    uint32_t output_block_rows;
+    uint32_t tile_rows;
+
+    PreparedEntry2DLess() : output_block_rows(64), tile_rows(64) {}
+    PreparedEntry2DLess(uint32_t ob_rows, uint32_t t_rows)
+        : output_block_rows(ob_rows), tile_rows(t_rows) {}
+
+    bool operator()(const PreparedEntry& a, const PreparedEntry& b) const {
+        uint32_t a_ob = a.output_row / output_block_rows;
+        uint32_t b_ob = b.output_row / output_block_rows;
+        if (a_ob != b_ob) {
+            return a_ob < b_ob;
+        }
+        uint32_t a_tile = a.factor_row / tile_rows;
+        uint32_t b_tile = b.factor_row / tile_rows;
+        if (a_tile != b_tile) {
+            return a_tile < b_tile;
+        }
+        if (a.output_row != b.output_row) {
+            return a.output_row < b.output_row;
+        }
+        return a.factor_row < b.factor_row;
+    }
+};
+
+inline PreparedTTM prepare_ttm(const SparseTensorCOO& x, int mode,
+                               uint32_t tile_rows, uint32_t output_block_rows) {
     PreparedTTM p;
     p.mode = mode;
     p.output_rows = ttm_output_rows(x, mode);
     p.factor_rows = ttm_factor_rows(x, mode);
     p.tile_rows = tile_rows == 0 ? 64 : tile_rows;
+    p.output_block_rows = output_block_rows == 0 ? 64 : output_block_rows;
     p.entries.reserve(x.entries.size());
 
     size_t n;
@@ -119,6 +163,29 @@ inline PreparedTTM prepare_ttm(const SparseTensorCOO& x, int mode, uint32_t tile
         }
         for (n = 1; n < p.tile_starts.size(); ++n) {
             p.tile_starts[n] += p.tile_starts[n - 1];
+        }
+    }
+
+    p.entries_2d = p.entries;
+    std::sort(p.entries_2d.begin(), p.entries_2d.end(),
+              PreparedEntry2DLess(p.output_block_rows, p.tile_rows));
+    {
+        size_t start = 0;
+        while (start < p.entries_2d.size()) {
+            const PreparedEntry& first = p.entries_2d[start];
+            uint32_t ob = first.output_row / p.output_block_rows;
+            uint32_t tile = first.factor_row / p.tile_rows;
+            size_t end = start + 1;
+            while (end < p.entries_2d.size()) {
+                const PreparedEntry& cur = p.entries_2d[end];
+                if (cur.output_row / p.output_block_rows != ob ||
+                    cur.factor_row / p.tile_rows != tile) {
+                    break;
+                }
+                ++end;
+            }
+            p.block_ranges_2d.push_back(PreparedBlockRange(ob, tile, start, end));
+            start = end;
         }
     }
     return p;
@@ -229,6 +296,72 @@ inline void compute_ttm_blocked_fp32_fp64(const PreparedTTM& p,
         size_t pos;
         for (pos = begin; pos < end; ++pos) {
             const PreparedEntry& e = p.factor_entries[pos];
+            double v = values[e.source_index];
+            uint32_t local_row = e.factor_row - tile_start;
+            size_t r;
+            for (r = 0; r < rank; ++r) {
+                (*output)[(size_t)e.output_row * rank + r] +=
+                    v * workspace[(size_t)local_row * rank + r];
+            }
+        }
+        std::chrono::high_resolution_clock::time_point c1 =
+            std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> cdiff = c1 - c0;
+        *compute_ms += cdiff.count();
+    }
+}
+
+inline void upcast_factor_tile_fp32_to_fp64(const PreparedTTM& p,
+                                            const DenseMatrix<float>& factor,
+                                            size_t rank,
+                                            uint32_t tile,
+                                            std::vector<double>* workspace) {
+    uint32_t tile_start = tile * p.tile_rows;
+    uint32_t tile_end = tile_start + p.tile_rows;
+    if (tile_end > p.factor_rows) {
+        tile_end = p.factor_rows;
+    }
+    uint32_t rows_in_tile = tile_end - tile_start;
+    uint32_t tr;
+    for (tr = 0; tr < rows_in_tile; ++tr) {
+        size_t r;
+        for (r = 0; r < rank; ++r) {
+            (*workspace)[(size_t)tr * rank + r] =
+                (double)factor((size_t)tile_start + tr, r);
+        }
+    }
+}
+
+inline void compute_ttm_2dblocked_fp32_fp64(const PreparedTTM& p,
+                                            const std::vector<double>& values,
+                                            const DenseMatrix<float>& factor,
+                                            size_t rank,
+                                            std::vector<double>* output,
+                                            double* upcast_ms,
+                                            double* compute_ms) {
+    output->assign((size_t)p.output_rows * rank, 0.0);
+    *upcast_ms = 0.0;
+    *compute_ms = 0.0;
+
+    std::vector<double> workspace((size_t)p.tile_rows * rank, 0.0);
+    size_t bi;
+    for (bi = 0; bi < p.block_ranges_2d.size(); ++bi) {
+        const PreparedBlockRange& range = p.block_ranges_2d[bi];
+        uint32_t tile_start = range.factor_tile_id * p.tile_rows;
+
+        std::chrono::high_resolution_clock::time_point u0 =
+            std::chrono::high_resolution_clock::now();
+        upcast_factor_tile_fp32_to_fp64(p, factor, rank, range.factor_tile_id, &workspace);
+        std::chrono::high_resolution_clock::time_point u1 =
+            std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> udiff = u1 - u0;
+        *upcast_ms += udiff.count();
+
+        std::chrono::high_resolution_clock::time_point c0 =
+            std::chrono::high_resolution_clock::now();
+        size_t pos;
+        for (pos = range.start; pos < range.end; ++pos) {
+            const PreparedEntry& e = p.entries_2d[pos];
             double v = values[e.source_index];
             uint32_t local_row = e.factor_row - tile_start;
             size_t r;

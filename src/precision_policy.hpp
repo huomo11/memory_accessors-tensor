@@ -8,8 +8,9 @@ enum VariantKind {
     VAR_FACTOR_FP32_COMPUTE_FP64 = 1,
     VAR_FACTOR_FP32_ONFLY_COMPUTE_FP64 = 2,
     VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64 = 3,
-    VAR_FACTOR_FP32_COMPUTE_FP32 = 4,
-    VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64 = 5
+    VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64 = 4,
+    VAR_FACTOR_FP32_COMPUTE_FP32 = 5,
+    VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64 = 6
 };
 
 inline const char* variant_name(VariantKind v) {
@@ -22,6 +23,8 @@ inline const char* variant_name(VariantKind v) {
         return "factor_fp32_onfly_compute_fp64";
     case VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64:
         return "factor_fp32_blocked_compute_fp64";
+    case VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64:
+        return "factor_fp32_2dblocked_compute_fp64";
     case VAR_FACTOR_FP32_COMPUTE_FP32:
         return "factor_fp32_compute_fp32";
     case VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64:
@@ -42,6 +45,7 @@ inline size_t variant_factor_storage_size(VariantKind v) {
     if (v == VAR_FACTOR_FP32_COMPUTE_FP64 ||
         v == VAR_FACTOR_FP32_ONFLY_COMPUTE_FP64 ||
         v == VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64 ||
+        v == VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64 ||
         v == VAR_FACTOR_FP32_COMPUTE_FP32) {
         return sizeof(float);
     }
@@ -51,6 +55,7 @@ inline size_t variant_factor_storage_size(VariantKind v) {
 inline size_t variant_factor_compute_read_size(VariantKind v) {
     if (v == VAR_FACTOR_FP32_ONFLY_COMPUTE_FP64 ||
         v == VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64 ||
+        v == VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64 ||
         v == VAR_FACTOR_FP32_COMPUTE_FP32) {
         return sizeof(float);
     }

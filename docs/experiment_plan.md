@@ -51,6 +51,21 @@ Stage 2 blocked factor accessor experiment:
 
 The initial blocked variant is serial to avoid races when different factor-row tiles update the same output row.
 
+## layout sweep
+
+Stage 2.5 sparse entry layout experiment:
+
+- dims: `512,512,512`
+- nnz: `1000000`
+- ranks: `64,128`
+- mode: `0`
+- threads: `1`
+- repeats: `5`
+- tile rows: `16,32,64,128,256`
+- output block rows: `16,32,64,128,256`
+
+This compares `output_row`, `factor_tile`, and `output_factor_2d` layouts using kernel-only and compute-only timing.
+
 ## shape sweep
 
 After pilot validation, test multiple tensor shapes and modes to capture output-row distribution effects:

@@ -36,7 +36,9 @@ public:
              << "dim1,"
              << "dim2,"
              << "tile_rows,"
-             << "repeat\n";
+             << "repeat,"
+             << "layout,"
+             << "output_block_rows\n";
     }
 
     bool good() const { return out_.good(); }
@@ -69,7 +71,9 @@ public:
              << r.dim1 << ","
              << r.dim2 << ","
              << r.tile_rows << ","
-             << r.repeat << "\n";
+             << r.repeat << ","
+             << r.layout << ","
+             << r.output_block_rows << "\n";
     }
 
 private:

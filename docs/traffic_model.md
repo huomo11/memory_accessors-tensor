@@ -42,4 +42,6 @@ The Stage 1.5 benchmark separates storage-side factor traffic from compute-side 
 
 The Stage 2 blocked accessor keeps fp32 factor storage and upcasts one factor-row tile to a fp64 workspace. Its storage-side and compute-side factor read estimate remains `nnz * rank * sizeof(float)`, while `tile_workspace_bytes = min(tile_rows, factor_rows) * rank * sizeof(double)` records the temporary fp64 workspace footprint.
 
+Stage 2.5 keeps the same logical factor traffic model but changes sparse entry layout. The 2D blocked layout sorts by output-row block and factor-row tile, aiming to balance factor workspace reuse with output locality.
+
 Stage 2 will measure block-wise factor accessor traffic more directly.

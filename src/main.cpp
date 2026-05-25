@@ -29,10 +29,12 @@ struct Options {
     int repeats;
     uint64_t seed;
     uint32_t tile_rows;
+    uint32_t output_block_rows;
 
     Options()
         : output("results/smoke.csv"), dim0(16), dim1(12), dim2(10),
-          active_threads(1), repeats(1), seed(42), tile_rows(64) {}
+          active_threads(1), repeats(1), seed(42), tile_rows(64),
+          output_block_rows(64) {}
 };
 
 static bool parse_long_checked(const char* text, long* value) {
@@ -122,7 +124,7 @@ static bool parse_dims(const std::string& text, uint32_t* d0, uint32_t* d1, uint
 static void usage() {
     std::cerr << "Usage: ttm_bench --output out.csv --dims I,J,K --nnz N "
               << "--ranks r1,r2 --modes 0,1,2 --threads T --repeats R "
-              << "--seed S --tile-rows T\n";
+              << "--seed S --tile-rows T --output-block-rows B\n";
 }
 
 static bool parse_args(int argc, char** argv, Options* opt) {
@@ -177,6 +179,12 @@ static bool parse_args(int argc, char** argv, Options* opt) {
                 return false;
             }
             opt->tile_rows = (uint32_t)tmp;
+        } else if (key == "--output-block-rows") {
+            long tmp = 0;
+            if (!parse_long_checked(val.c_str(), &tmp) || tmp < 1) {
+                return false;
+            }
+            opt->output_block_rows = (uint32_t)tmp;
         } else {
             return false;
         }
@@ -260,7 +268,8 @@ static MetricsRow make_metric_base(const Options& opt, const PreparedTTM& prep,
     row.factor_compute_logical_read_bytes =
         nnz * (uint64_t)rank * (uint64_t)factor_compute_size;
     row.tile_workspace_bytes = 0;
-    if (variant == VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64) {
+    if (variant == VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64 ||
+        variant == VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64) {
         uint64_t rows = (uint64_t)opt.tile_rows;
         if (rows > (uint64_t)prep.factor_rows) {
             rows = (uint64_t)prep.factor_rows;
@@ -282,6 +291,13 @@ static MetricsRow make_metric_base(const Options& opt, const PreparedTTM& prep,
     row.dim1 = opt.dim1;
     row.dim2 = opt.dim2;
     row.tile_rows = opt.tile_rows;
+    row.layout = "output_row";
+    if (variant == VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64) {
+        row.layout = "factor_tile";
+    } else if (variant == VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64) {
+        row.layout = "output_factor_2d";
+    }
+    row.output_block_rows = opt.output_block_rows;
     row.repeat = repeat;
     return row;
 }
@@ -327,6 +343,11 @@ static MetricsRow run_variant(const Options& opt,
         row.thread_count = 1;
         compute_ttm_blocked_fp32_fp64(prep, values64, factor32, (size_t)rank,
                                       &out64, &row.upcast_prepare_ms, &row.compute_ms);
+    } else if (variant == VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64) {
+        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
+        row.thread_count = 1;
+        compute_ttm_2dblocked_fp32_fp64(prep, values64, factor32, (size_t)rank,
+                                        &out64, &row.upcast_prepare_ms, &row.compute_ms);
     } else if (variant == VAR_FACTOR_FP32_COMPUTE_FP32) {
         DenseMatrix<float> factor32 = convert_factor<float>(factor64);
         std::vector<float> values32 = convert_values<float>(values64);
@@ -386,7 +407,7 @@ int main(int argc, char** argv) {
             }
 
             Timer prep_timer;
-            PreparedTTM prep = prepare_ttm(x, mode, opt.tile_rows);
+            PreparedTTM prep = prepare_ttm(x, mode, opt.tile_rows, opt.output_block_rows);
             double format_ms = prep_timer.elapsed_ms();
 
             size_t ri;
@@ -421,14 +442,15 @@ int main(int argc, char** argv) {
                         base.rel_error = 0.0;
                         csv.write(base);
 
-                        VariantKind vars[5];
+                        VariantKind vars[6];
                         vars[0] = VAR_FACTOR_FP32_COMPUTE_FP64;
                         vars[1] = VAR_FACTOR_FP32_ONFLY_COMPUTE_FP64;
                         vars[2] = VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64;
-                        vars[3] = VAR_FACTOR_FP32_COMPUTE_FP32;
-                        vars[4] = VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64;
+                        vars[3] = VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64;
+                        vars[4] = VAR_FACTOR_FP32_COMPUTE_FP32;
+                        vars[5] = VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64;
                         int vi;
-                        for (vi = 0; vi < 5; ++vi) {
+                        for (vi = 0; vi < 6; ++vi) {
                             MetricsRow row = run_variant(opt, prep, format_ms, values64, factor64,
                                                          vars[vi], rank, mode, rep, baseline);
                             csv.write(row);

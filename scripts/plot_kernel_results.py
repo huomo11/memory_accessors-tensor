@@ -13,6 +13,7 @@ COLORS = {
     "factor_fp32_global_upcast_compute_fp64": "#2ca02c",
     "factor_fp32_onfly_compute_fp64": "#17becf",
     "factor_fp32_blocked_compute_fp64": "#ff7f0e",
+    "factor_fp32_2dblocked_compute_fp64": "#8c564b",
     "factor_fp32_compute_fp32": "#d62728",
     "value_fp32_factor_fp64_compute_fp64": "#9467bd",
 }
@@ -72,6 +73,21 @@ def grouped_median(rows, x_key, y_key):
     data = {}
     for r in rows:
         key = (r["variant"], get_float(r, x_key))
+        data.setdefault(key, []).append(get_float(r, y_key))
+    out = {}
+    for key, vals in data.items():
+        out.setdefault(key[0], []).append((key[1], median(vals)))
+    for k in out:
+        out[k].sort()
+    return out
+
+
+def grouped_median_by_label(rows, label_key, y_key):
+    data = {}
+    for r in rows:
+        label = r.get(label_key, "")
+        variant = r["variant"]
+        key = (variant, label)
         data.setdefault(key, []).append(get_float(r, y_key))
     out = {}
     for key, vals in data.items():
@@ -198,6 +214,55 @@ def phase_time(rows, out_path):
     write_svg(out_path, lines)
 
 
+def categorical_bar_plot(rows, out_path, label_key, y_key, title):
+    data = grouped_median_by_label(rows, label_key, y_key)
+    labels = sorted(set(label for vals in data.values() for label, _ in vals))
+    variants = sorted(data)
+    if not labels or not variants:
+        return
+    w, h = 980, 480
+    l, t, b = 70, 50, 80
+    max_y = 1.0
+    value_map = {}
+    for variant in variants:
+        for label, val in data[variant]:
+            value_map[(variant, label)] = val
+            max_y = max(max_y, val)
+    lines = svg_begin(w, h)
+    lines.append('<text class="title" x="%d" y="28">%s</text>' % (l, title))
+    lines.append('<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#222"/>' % (l, h-b, w-30, h-b))
+    lines.append('<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#222"/>' % (l, t, l, h-b))
+    group_w = (w - l - 60) / float(len(labels))
+    bar_w = max(3.0, min(18.0, group_w / float(len(variants) + 1)))
+    li = 0
+    for label in labels:
+        base_x = l + li * group_w + 8
+        vi = 0
+        for variant in variants:
+            val = value_map.get((variant, label), 0.0)
+            height = val / max_y * (h - b - t)
+            x = base_x + vi * bar_w
+            y = h - b - height
+            color = COLORS.get(variant, "#333333")
+            lines.append('<rect x="%.2f" y="%.2f" width="%.2f" height="%.2f" fill="%s"/>' %
+                         (x, y, bar_w - 1.0, height, color))
+            vi += 1
+        lines.append('<text transform="translate(%.2f,%d) rotate(35)">%s</text>' %
+                     (base_x, h - 55, label))
+        li += 1
+    lines.append('<text x="12" y="%d">%.3g</text>' % (t + 4, max_y))
+    lx, ly = w - 360, 58
+    vi = 0
+    for variant in variants:
+        color = COLORS.get(variant, "#333333")
+        lines.append('<rect x="%d" y="%d" width="12" height="12" fill="%s"/>' %
+                     (lx, ly + 18 * vi - 10, color))
+        lines.append('<text x="%d" y="%d">%s</text>' % (lx + 18, ly + 18 * vi, variant))
+        vi += 1
+    lines.extend(svg_end())
+    write_svg(out_path, lines)
+
+
 def threads_speedup(rows, out_path):
     base = [r for r in rows if r["variant"] == "factor_fp64_compute_fp64"]
     if not base:
@@ -238,6 +303,11 @@ def main():
     line_plot(rows, os.path.join(out_dir, "rank_vs_rel_error.svg"), "rank", "rel_error", "rank_vs_rel_error", "rel_error")
     compute_traffic_breakdown(rows, os.path.join(out_dir, "rank_vs_compute_traffic_breakdown.svg"))
     phase_time(rows, os.path.join(out_dir, "variant_vs_phase_time.svg"))
+    line_plot(rows, os.path.join(out_dir, "tile_rows_vs_kernel_ms.svg"), "tile_rows", "kernel_ms", "tile_rows_vs_kernel_ms", "kernel_ms")
+    if rows and "output_block_rows" in rows[0]:
+        line_plot(rows, os.path.join(out_dir, "output_block_rows_vs_kernel_ms.svg"), "output_block_rows", "kernel_ms", "output_block_rows_vs_kernel_ms", "kernel_ms")
+    if rows and "layout" in rows[0]:
+        categorical_bar_plot(rows, os.path.join(out_dir, "layout_vs_kernel_ms.svg"), "layout", "kernel_ms", "layout_vs_kernel_ms")
     threads_speedup(rows, os.path.join(out_dir, "threads_vs_speedup.svg"))
     print("wrote SVG plots to %s" % out_dir)
     return 0

@@ -16,9 +16,10 @@ Stage 1 uses a global-upcast prototype:
 - `factor_fp32_compute_fp64` stores factors in fp32, upcasts the whole factor to fp64 workspace, and computes in fp64;
 - `factor_fp32_onfly_compute_fp64` stores factors in fp32 and casts each factor element to fp64 directly in the compute loop;
 - `factor_fp32_blocked_compute_fp64` stores factors in fp32, upcasts one factor-row tile at a time to fp64 workspace, and reuses that tile while processing its nonzeros;
+- `factor_fp32_2dblocked_compute_fp64` uses an output-row-block by factor-row-tile layout before applying the tile workspace;
 - `value_fp32_factor_fp64_compute_fp64` stores sparse values in fp32, upcasts values to fp64 workspace, and computes in fp64.
 
-The blocked accessor is the first Stage 2 prototype. It is intentionally single-threaded for now and ignores `--threads` for that variant: different factor-row tiles may update the same output row, so parallel tile execution would need atomics or per-thread output buffers plus reduction. This version avoids races by processing tiles serially.
+The blocked accessors are intentionally single-threaded for now and ignore `--threads` for those variants. The factor-row blocked variant can update the same output row from different factor tiles. The 2D blocked variant groups by output-row block first, which is layout-aware and preserves more output locality, but this first version still processes blocks serially to keep correctness simple and avoid atomics.
 
 Later stages will replace global upcast with block-wise factor accessors.
 
@@ -50,7 +51,8 @@ mkdir -p results
   --threads 2 \
   --repeats 1 \
   --seed 42 \
-  --tile-rows 64
+  --tile-rows 64 \
+  --output-block-rows 64
 ```
 
 ## Pilot Rank Sweep
@@ -91,6 +93,14 @@ bash scripts/run_tile_sweep.sh
 
 This runs the Stage 2 blocked accessor sweep with tile rows `8,16,32,64,128,256`, dims `512,512,512`, nnz `1000000`, ranks `64,128`, mode `0`, threads `1`, repeats `5`, and seed `42`.
 
+## Layout Sweep
+
+```bash
+bash scripts/run_layout_sweep.sh
+```
+
+This runs the Stage 2.5 layout-aware sweep with tile rows `16,32,64,128,256` and output block rows `16,32,64,128,256`. The main comparison is the old `factor_tile` layout versus the new `output_factor_2d` layout.
+
 ## Check Results
 
 ```bash
@@ -118,8 +128,8 @@ Generated SVGs:
 
 Fixed schema:
 
-`total_ms, format_prepare_ms, upcast_prepare_ms, compute_ms, kernel_ms, index_storage_bytes, value_storage_bytes, factor_storage_bytes, output_storage_bytes, index_logical_read_bytes, value_logical_read_bytes, factor_logical_read_bytes, factor_compute_logical_read_bytes, tile_workspace_bytes, output_logical_write_bytes, rel_error, rank, nnz, mode, thread_count, seed, variant, dim0, dim1, dim2, tile_rows, repeat`
+`total_ms, format_prepare_ms, upcast_prepare_ms, compute_ms, kernel_ms, index_storage_bytes, value_storage_bytes, factor_storage_bytes, output_storage_bytes, index_logical_read_bytes, value_logical_read_bytes, factor_logical_read_bytes, factor_compute_logical_read_bytes, tile_workspace_bytes, output_logical_write_bytes, rel_error, rank, nnz, mode, thread_count, seed, variant, dim0, dim1, dim2, tile_rows, repeat, layout, output_block_rows`
 
 `format_prepare_ms` measures mode-wise COO sorting and row-start construction. `upcast_prepare_ms` measures fp32 storage to fp64 workspace conversion. `compute_ms` measures the core sparse-dense TTM loop. `kernel_ms = upcast_prepare_ms + compute_ms`. `total_ms` remains `format_prepare_ms + upcast_prepare_ms + compute_ms`.
 
-`factor_logical_read_bytes` is the storage-side factor traffic estimate. `factor_compute_logical_read_bytes` is the compute-side estimate: global-upcast fp32/fp64 compute reads fp64 workspace, while on-the-fly and blocked fp32/fp64 compute read fp32 factor storage. `tile_workspace_bytes` records the fp64 tile workspace footprint used by the blocked variant.
+`layout` is `output_row`, `factor_tile`, or `output_factor_2d`. `factor_logical_read_bytes` is the storage-side factor traffic estimate. `factor_compute_logical_read_bytes` is the compute-side estimate: global-upcast fp32/fp64 compute reads fp64 workspace, while on-the-fly and blocked fp32/fp64 compute read fp32 factor storage. `tile_workspace_bytes` records the fp64 tile workspace footprint used by blocked variants.
