@@ -1,3 +1,0 @@
-/mnt/d/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/ttm_bench.dir
-/mnt/d/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/edit_cache.dir
-/mnt/d/WORK/CODO/memory_accessors-tensor/build/CMakeFiles/rebuild_cache.dir
