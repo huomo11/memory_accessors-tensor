@@ -1,123 +1,98 @@
-# Sparse-Dense TTM Microbenchmark
+# memory_accessors-tensor
 
-This is a small C++17 CPU-only benchmark for validating whether dense factor
-low-storage / high-compute is useful in sparse-dense tensor-times-matrix (TTM).
-It intentionally does not implement a full Tucker decomposition library.
+This repository is a Stage 1 kernel proof for a CCF HPC paper direction:
 
-The benchmark generates a synthetic 3D sparse tensor in COO format and performs
-mode-wise sparse TTM:
+> Low-storage high-compute factor accessors for sparse-dense TTM / multi-TTM in sparse randomized Tucker decomposition.
 
-```text
-SparseTensorCOO x DenseMatrix(mode)
-```
+The current code does **not** implement Tucker, HOSVD, STHOSVD, R-STHOSVD, SP-STHOSVD, GPU kernels, CUDA, or a general tensor library. It only benchmarks 3D COO sparse tensor times dense factor matrix for mode-wise sparse TTM.
 
-Each nonzero contributes `rank` multiply-adds into a dense output whose target
-mode is replaced by the factor rank.
+## Current Scope
 
-## Variants
+The experiment asks whether low-storage high-compute treatment of repeatedly accessed dense factor/sketch matrices is more useful than applying the same idea to sparse values.
 
-The CSV contains one row for each tested `(mode, rank, variant)` combination:
+Stage 1 uses a global-upcast prototype:
 
-1. `factor_fp64_compute_fp64`: sparse value fp64, factor fp64 storage, fp64 compute
-2. `factor_fp32_compute_fp64`: sparse value fp64, factor fp32 storage, fp64 compute
-3. `factor_fp32_compute_fp32`: sparse value fp64, factor fp32 storage, fp32 compute
-4. `value_fp32_factor_fp64_compute_fp64`: sparse value fp32 storage, factor fp64, fp64 compute
+- sparse tensor/core stays sparse;
+- `factor_fp32_compute_fp64` stores factors in fp32, upcasts the whole factor to fp64 workspace, and computes in fp64;
+- `value_fp32_factor_fp64_compute_fp64` stores sparse values in fp32, upcasts values to fp64 workspace, and computes in fp64.
 
-Variant 1 is used as the reference output for `rel_error`.
+Later stages will replace global upcast with block-wise factor accessors.
 
 ## Build
 
-```powershell
+```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release -j
+cmake --build build -j
 ```
 
-## Run
+The CMake file is written for C++11 and GCC 4.8.5 style compatibility. Non-MSVC builds explicitly pass `-std=c++11` and link `Threads::Threads`.
 
-```powershell
-.\build\Release\ttm_bench.exe --output results.csv --dims 128,128,128 --nnz 200000 --ranks 16,32,64 --modes 0,1,2 --threads 8 --repeats 3
+## Smoke Test
+
+```bash
+bash scripts/run_smoke.sh
 ```
 
-On single-config generators the executable may be:
+or manually:
 
-```powershell
-.\build\ttm_bench.exe --output results.csv
+```bash
+mkdir -p results
+./build/ttm_bench \
+  --output results/smoke.csv \
+  --dims 16,12,10 \
+  --nnz 1000 \
+  --ranks 4 \
+  --modes 0 \
+  --threads 2 \
+  --repeats 1 \
+  --seed 42
 ```
 
-## CSV Columns
+## Pilot Rank Sweep
 
-The benchmark emits one row per `(mode, rank, variant, repeat)` case. The core
-columns are emitted first:
-
-```text
-total_ms,format_prepare_ms,upcast_prepare_ms,compute_ms,index_storage_bytes,value_storage_bytes,factor_storage_bytes,output_storage_bytes,index_logical_read_bytes,value_logical_read_bytes,factor_logical_read_bytes,output_logical_write_bytes,rel_error,rank,nnz,mode,thread_count,seed
+```bash
+bash scripts/run_pilot_rank.sh
 ```
 
-Additional context columns:
+This runs:
 
-```text
-variant,dim0,dim1,dim2,repeat
+- dims `512,512,512`
+- nnz `1000000`
+- ranks `8,16,32,64,128,256`
+- mode `0`
+- threads `20`
+- repeats `5`
+- seed `42`
+
+Output: `results/pilot_rank.csv`.
+
+## Full Kernel Sweep
+
+```bash
+bash scripts/run_kernel_sweep.sh
 ```
 
-Column meanings:
+Outputs:
 
-- `total_ms`: sum of `format_prepare_ms + upcast_prepare_ms + compute_ms`.
-- `format_prepare_ms`: COO format build overhead for the selected mode:
-  computing output rows, sorting by output row, and building output row groups.
-- `upcast_prepare_ms`: time to upcast low-storage fp32 factor or value arrays to
-  fp64 workspaces for fp64 compute variants.
-- `compute_ms`: core multiply-add phase after format preparation and any upcast.
-- `index_storage_bytes`: COO index storage footprint, `nnz * 3 * sizeof(uint32)`.
-- `value_storage_bytes`: sparse value storage footprint for the variant.
-- `factor_storage_bytes`: dense factor storage footprint for the variant.
-- `output_storage_bytes`: dense output footprint for the compute/output type.
-- `index_logical_read_bytes`: estimated index reads, `nnz * 3 * sizeof(uint32)`.
-- `value_logical_read_bytes`: estimated value reads using value storage type.
-- `factor_logical_read_bytes`: estimated factor reads,
-  `nnz * rank * sizeof(factor_storage_type)`.
-- `output_logical_write_bytes`: estimated output writes,
-  `max(output_storage_bytes, nnz * rank * sizeof(output_type))`.
-- `rel_error`: relative L2 error against `factor_fp64_compute_fp64`.
-- `seed`: RNG seed used to generate the sparse tensor and dense factors.
+- `results/rank_sweep.csv`
+- `results/nnz_sweep.csv`
+- `results/thread_sweep.csv`
 
-## Notes
+## Check Results
 
-- The sparse tensor is generated once from `seed`. For each `(mode, rank)`, the
-  fp32 factor is rounded from the same fp64 factor, so all variants use matching
-  initialization.
-- The current executable builds the sorted/grouped COO format once per mode and
-  reports that `format_prepare_ms` on each matching row. Treat it as format build
-  overhead. A kernel-only analysis can focus on `compute_ms`, or reuse the
-  prepared format and amortize this cost.
-- Multi-threading uses `std::thread` and partitions the sorted output-row
-  ranges across threads, avoiding atomics.
-- Indices are stored as 32-bit integers.
-
-## Sweep
-
-Run the paper-oriented sweep:
-
-```powershell
-.\scripts\run_kernel_sweep.ps1 -Exe .\build\Release\ttm_bench.exe -Output kernel_sweep.csv
+```bash
+python3 scripts/check_kernel_results.py results/pilot_rank.csv
 ```
 
-The script scans:
+The checker uses only the Python standard library and reports median timing, median relative error, fp32-factor speedup, fp32-value speedup, and factor logical traffic share.
 
-```text
-ranks: 8 16 32 64 128 256
-modes: 0 1 2
-nnz: 100000 500000 1000000
-threads: 1 4 8 16
-repeats: 5
+## Plot SVGs
+
+```bash
+python3 scripts/plot_kernel_results.py results/pilot_rank.csv --out-dir results/pilot_rank_plots
 ```
 
-## Plot
-
-```powershell
-python .\scripts\plot_kernel_results.py kernel_sweep.csv --out-dir plots
-```
-
-The plotting script writes:
+Generated SVGs:
 
 - `rank_vs_total_ms.svg`
 - `rank_vs_rel_error.svg`
@@ -125,4 +100,10 @@ The plotting script writes:
 - `variant_vs_phase_time.svg`
 - `threads_vs_speedup.svg`
 
-It uses only the Python standard library and writes SVG files.
+## CSV Fields
+
+Fixed schema:
+
+`total_ms, format_prepare_ms, upcast_prepare_ms, compute_ms, index_storage_bytes, value_storage_bytes, factor_storage_bytes, output_storage_bytes, index_logical_read_bytes, value_logical_read_bytes, factor_logical_read_bytes, output_logical_write_bytes, rel_error, rank, nnz, mode, thread_count, seed, variant, dim0, dim1, dim2, repeat`
+
+`format_prepare_ms` measures mode-wise COO sorting and row-start construction. `upcast_prepare_ms` measures fp32 storage to fp64 workspace conversion. `compute_ms` measures the core sparse-dense TTM loop. `total_ms` is the sum of those three phase times.

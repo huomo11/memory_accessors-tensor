@@ -1,302 +1,233 @@
 #!/usr/bin/env python3
-import argparse
+from __future__ import print_function
+
 import csv
-import html
 import math
-from collections import defaultdict
-from pathlib import Path
-from statistics import median
+import os
+import sys
 
 
-NUMERIC_COLUMNS = {
-    "total_ms",
-    "format_prepare_ms",
-    "upcast_prepare_ms",
-    "compute_ms",
-    "index_storage_bytes",
-    "value_storage_bytes",
-    "factor_storage_bytes",
-    "output_storage_bytes",
-    "index_logical_read_bytes",
-    "value_logical_read_bytes",
-    "factor_logical_read_bytes",
-    "output_logical_write_bytes",
-    "rel_error",
-    "rank",
-    "nnz",
-    "mode",
-    "thread_count",
-    "seed",
-    "dim0",
-    "dim1",
-    "dim2",
-    "repeat",
+COLORS = {
+    "factor_fp64_compute_fp64": "#1f77b4",
+    "factor_fp32_compute_fp64": "#2ca02c",
+    "factor_fp32_compute_fp32": "#d62728",
+    "value_fp32_factor_fp64_compute_fp64": "#9467bd",
 }
 
-PALETTE = ["#2563eb", "#dc2626", "#059669", "#9333ea", "#ea580c", "#0891b2"]
+
+def median(values):
+    vals = sorted(values)
+    if not vals:
+        return 0.0
+    n = len(vals)
+    mid = n // 2
+    if n % 2:
+        return vals[mid]
+    return 0.5 * (vals[mid - 1] + vals[mid])
 
 
-def read_rows(path):
-    with open(path, newline="") as f:
-        rows = list(csv.DictReader(f))
-    for row in rows:
-        for key in NUMERIC_COLUMNS:
-            if key in row and row[key] != "":
-                row[key] = float(row[key])
-    return rows
+def load_rows(path):
+    with open(path, "r", newline="") as f:
+        return list(csv.DictReader(f))
 
 
-def variants(rows):
-    return sorted({row["variant"] for row in rows})
+def ensure_dir(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
 
 
-def grouped_median(rows, key_fields, value_field):
-    groups = defaultdict(list)
-    for row in rows:
-        key = tuple(row[field] for field in key_fields)
-        groups[key].append(row[value_field])
-    return {key: median(values) for key, values in groups.items()}
+def svg_begin(w, h):
+    return ['<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d">' % (w, h, w, h),
+            '<rect width="100%" height="100%" fill="white"/>',
+            '<style>text{font-family:Arial,sans-serif;font-size:12px}.title{font-size:16px;font-weight:bold}</style>']
 
 
-def write_svg(path, body, width=900, height=560):
-    text = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-        f'viewBox="0 0 {width} {height}">\n'
-        '<rect width="100%" height="100%" fill="white"/>\n'
-        '<style>text{font-family:Arial,sans-serif;font-size:12px;fill:#111827}'
-        '.title{font-size:18px;font-weight:700}.axis{stroke:#111827;stroke-width:1}'
-        '.grid{stroke:#e5e7eb;stroke-width:1}.legend{font-size:11px}</style>\n'
-        f"{body}\n</svg>\n"
-    )
-    path.write_text(text, encoding="utf-8")
+def svg_end():
+    return ["</svg>"]
 
 
-def chart_frame(title, xlabel, ylabel, width=900, height=560):
-    margin = {"left": 88, "right": 220, "top": 52, "bottom": 78}
-    x0 = margin["left"]
-    y0 = height - margin["bottom"]
-    x1 = width - margin["right"]
-    y1 = margin["top"]
-    body = [
-        f'<text x="{width / 2:.1f}" y="28" text-anchor="middle" class="title">{html.escape(title)}</text>',
-        f'<line x1="{x0}" y1="{y0}" x2="{x1}" y2="{y0}" class="axis"/>',
-        f'<line x1="{x0}" y1="{y0}" x2="{x0}" y2="{y1}" class="axis"/>',
-        f'<text x="{(x0 + x1) / 2:.1f}" y="{height - 24}" text-anchor="middle">{html.escape(xlabel)}</text>',
-        f'<text transform="translate(22,{(y0 + y1) / 2:.1f}) rotate(-90)" text-anchor="middle">{html.escape(ylabel)}</text>',
-    ]
-    return body, x0, y0, x1, y1
+def write_svg(path, lines):
+    with open(path, "w") as f:
+        f.write("\n".join(lines))
 
 
-def y_domain(values):
-    finite = [v for v in values if math.isfinite(v)]
-    if not finite:
-        return 0.0, 1.0
-    lo = min(0.0, min(finite))
-    hi = max(finite)
-    if hi <= lo:
-        hi = lo + 1.0
-    pad = (hi - lo) * 0.08
-    return lo, hi + pad
+def scale(v, vmin, vmax, omin, omax):
+    if vmax == vmin:
+        return (omin + omax) * 0.5
+    return omin + (v - vmin) * (omax - omin) / (vmax - vmin)
 
 
-def line_chart(series, title, xlabel, ylabel, out_path, logy=False):
-    width, height = 900, 560
-    body, x0, y0, x1, y1 = chart_frame(title, xlabel, ylabel, width, height)
-    all_x = sorted({x for points in series.values() for x, _ in points})
-    if not all_x:
-        write_svg(out_path, body, width, height)
+def grouped_median(rows, x_key, y_key):
+    data = {}
+    for r in rows:
+        key = (r["variant"], float(r[x_key]))
+        data.setdefault(key, []).append(float(r[y_key]))
+    out = {}
+    for key, vals in data.items():
+        out.setdefault(key[0], []).append((key[1], median(vals)))
+    for k in out:
+        out[k].sort()
+    return out
+
+
+def line_plot(rows, out_path, x_key, y_key, title, y_label):
+    data = grouped_median(rows, x_key, y_key)
+    points = []
+    for vals in data.values():
+        points.extend(vals)
+    if not points:
         return
-
-    x_positions = {x: x0 + (x1 - x0) * i / max(1, len(all_x) - 1) for i, x in enumerate(all_x)}
-    raw_y = [y for points in series.values() for _, y in points]
-    if logy:
-        positive = [v for v in raw_y if v > 0.0 and math.isfinite(v)]
-        floor = min(positive) / 10.0 if positive else 1e-16
-        transform = lambda v: math.log10(max(v, floor))
-        y_label = lambda v: f"{10 ** v:.1e}"
-        y_values = [transform(v) for v in raw_y]
-    else:
-        transform = lambda v: v
-        y_label = lambda v: f"{v:.3g}"
-        y_values = raw_y
-
-    ymin, ymax = y_domain(y_values)
-    for t in range(6):
-        frac = t / 5.0
-        y = y0 - (y0 - y1) * frac
-        value = ymin + (ymax - ymin) * frac
-        body.append(f'<line x1="{x0}" y1="{y:.1f}" x2="{x1}" y2="{y:.1f}" class="grid"/>')
-        body.append(f'<text x="{x0 - 8}" y="{y + 4:.1f}" text-anchor="end">{y_label(value)}</text>')
-
-    for i, x in enumerate(all_x):
-        px = x_positions[x]
-        body.append(f'<text x="{px:.1f}" y="{y0 + 20}" text-anchor="middle">{int(x)}</text>')
-
-    for si, (name, points) in enumerate(series.items()):
-        color = PALETTE[si % len(PALETTE)]
-        coords = []
-        for x, y in points:
-            px = x_positions[x]
-            ty = transform(y)
-            py = y0 - (ty - ymin) / (ymax - ymin) * (y0 - y1)
-            coords.append((px, py))
-        if len(coords) >= 2:
-            d = " ".join(f"{px:.1f},{py:.1f}" for px, py in coords)
-            body.append(f'<polyline points="{d}" fill="none" stroke="{color}" stroke-width="2"/>')
-        for px, py in coords:
-            body.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="3" fill="{color}"/>')
-        legend_y = y1 + si * 18
-        body.append(f'<rect x="{x1 + 24}" y="{legend_y - 9}" width="10" height="10" fill="{color}"/>')
-        body.append(f'<text x="{x1 + 40}" y="{legend_y}" class="legend">{html.escape(name)}</text>')
-
-    write_svg(out_path, body, width, height)
-
-
-def rank_vs_metric(rows, metric, title, ylabel, out_path, logy=False):
-    med = grouped_median(rows, ["variant", "rank"], metric)
-    series = {}
-    for variant in variants(rows):
-        points = sorted((rank, value) for (v, rank), value in med.items() if v == variant)
-        series[variant] = points
-    line_chart(series, title, "rank", ylabel, out_path, logy=logy)
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    w, h = 820, 460
+    l, r, t, b = 70, 30, 50, 60
+    x0, x1 = min(xs), max(xs)
+    y0, y1 = 0.0, max(ys) * 1.08 if max(ys) > 0 else 1.0
+    lines = svg_begin(w, h)
+    lines.append('<text class="title" x="%d" y="28">%s</text>' % (l, title))
+    lines.append('<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#222"/>' % (l, h-b, w-r, h-b))
+    lines.append('<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#222"/>' % (l, t, l, h-b))
+    lines.append('<text x="%d" y="%d">%s</text>' % (w//2 - 20, h-18, x_key))
+    lines.append('<text x="8" y="%d">%s</text>' % (h//2, y_label))
+    for variant in sorted(data):
+        vals = data[variant]
+        color = COLORS.get(variant, "#333333")
+        path = []
+        for x, y in vals:
+            px = scale(x, x0, x1, l, w-r)
+            py = scale(y, y0, y1, h-b, t)
+            path.append((px, py))
+        if path:
+            d = "M " + " L ".join(["%.2f %.2f" % p for p in path])
+            lines.append('<path d="%s" fill="none" stroke="%s" stroke-width="2"/>' % (d, color))
+            for px, py in path:
+                lines.append('<circle cx="%.2f" cy="%.2f" r="3" fill="%s"/>' % (px, py, color))
+    y_text = "%.3g" % y1
+    lines.append('<text x="12" y="%d">%s</text>' % (t + 4, y_text))
+    lines.append('<text x="12" y="%d">0</text>' % (h-b))
+    lx, ly = w - 310, 58
+    i = 0
+    for variant in sorted(data):
+        color = COLORS.get(variant, "#333333")
+        lines.append('<rect x="%d" y="%d" width="12" height="12" fill="%s"/>' % (lx, ly + 18*i - 10, color))
+        lines.append('<text x="%d" y="%d">%s</text>' % (lx + 18, ly + 18*i, variant))
+        i += 1
+    lines.extend(svg_end())
+    write_svg(out_path, lines)
 
 
 def traffic_breakdown(rows, out_path):
-    components = [
-        ("index_logical_read_bytes", "index read"),
-        ("value_logical_read_bytes", "value read"),
-        ("factor_logical_read_bytes", "factor read"),
-        ("output_logical_write_bytes", "output write"),
-    ]
-    ranks = sorted({int(row["rank"]) for row in rows})
-    stacks = []
-    totals = []
+    data = {}
+    for r in rows:
+        key = (float(r["rank"]), r["variant"])
+        idx = float(r["index_logical_read_bytes"])
+        val = float(r["value_logical_read_bytes"])
+        fac = float(r["factor_logical_read_bytes"])
+        data.setdefault(key, []).append((idx, val, fac))
+    ranks = sorted(set(k[0] for k in data))
+    variants = sorted(set(k[1] for k in data))
+    w, h = 900, 480
+    lines = svg_begin(w, h)
+    lines.append('<text class="title" x="50" y="28">rank_vs_traffic_breakdown</text>')
+    x = 70
+    bar_w = 14
+    gap = 8
+    max_total = 1.0
+    totals = {}
+    for key, vals in data.items():
+        idx = median([v[0] for v in vals])
+        val = median([v[1] for v in vals])
+        fac = median([v[2] for v in vals])
+        totals[key] = (idx, val, fac)
+        max_total = max(max_total, idx + val + fac)
     for rank in ranks:
-        rank_rows = [row for row in rows if int(row["rank"]) == rank]
-        values = [median(row[field] for row in rank_rows) / (1024.0 * 1024.0) for field, _ in components]
-        stacks.append(values)
-        totals.append(sum(values))
-
-    width, height = 900, 560
-    body, x0, y0, x1, y1 = chart_frame(
-        "rank vs estimated traffic breakdown",
-        "rank",
-        "median estimated logical traffic (MiB)",
-        width,
-        height,
-    )
-    _, ymax = y_domain(totals)
-    bar_gap = 12
-    bar_w = max(18, (x1 - x0) / max(1, len(ranks)) - bar_gap)
-
-    for t in range(6):
-        frac = t / 5.0
-        y = y0 - (y0 - y1) * frac
-        value = ymax * frac
-        body.append(f'<line x1="{x0}" y1="{y:.1f}" x2="{x1}" y2="{y:.1f}" class="grid"/>')
-        body.append(f'<text x="{x0 - 8}" y="{y + 4:.1f}" text-anchor="end">{value:.3g}</text>')
-
-    for i, rank in enumerate(ranks):
-        cx = x0 + (i + 0.5) * (x1 - x0) / max(1, len(ranks))
-        bottom = y0
-        for ci, value in enumerate(stacks[i]):
-            h = value / ymax * (y0 - y1) if ymax > 0 else 0
-            color = PALETTE[ci % len(PALETTE)]
-            body.append(f'<rect x="{cx - bar_w / 2:.1f}" y="{bottom - h:.1f}" width="{bar_w:.1f}" height="{h:.1f}" fill="{color}"/>')
-            bottom -= h
-        body.append(f'<text x="{cx:.1f}" y="{y0 + 20}" text-anchor="middle">{rank}</text>')
-
-    for ci, (_, label) in enumerate(components):
-        legend_y = y1 + ci * 18
-        color = PALETTE[ci % len(PALETTE)]
-        body.append(f'<rect x="{x1 + 24}" y="{legend_y - 9}" width="10" height="10" fill="{color}"/>')
-        body.append(f'<text x="{x1 + 40}" y="{legend_y}" class="legend">{html.escape(label)}</text>')
-    write_svg(out_path, body, width, height)
+        lines.append('<text x="%d" y="440">r=%s</text>' % (x, int(rank)))
+        for variant in variants:
+            idx, val, fac = totals.get((rank, variant), (0, 0, 0))
+            ybase = 405
+            heights = [idx / max_total * 330.0, val / max_total * 330.0, fac / max_total * 330.0]
+            colors = ["#777777", "#ffbf00", COLORS.get(variant, "#333333")]
+            y = ybase
+            for height, color in zip(heights, colors):
+                y -= height
+                lines.append('<rect x="%d" y="%.2f" width="%d" height="%.2f" fill="%s"/>' % (x, y, bar_w, height, color))
+            x += bar_w + gap
+        x += 22
+    lines.append('<text x="650" y="70">stack: index, value, factor</text>')
+    lines.extend(svg_end())
+    write_svg(out_path, lines)
 
 
-def variant_phase_bars(rows, out_path):
-    phase_fields = ["compute_ms", "format_prepare_ms", "upcast_prepare_ms"]
-    phase_labels = ["compute", "format prepare", "upcast prepare"]
-    names = variants(rows)
-    values = [
-        [median(row[field] for row in rows if row["variant"] == name) for field in phase_fields]
-        for name in names
-    ]
-    ymax = max([sum(v) for v in values] + [1.0])
-
-    width, height = 980, 580
-    body, x0, y0, x1, y1 = chart_frame("variant vs median phase time", "variant", "median time (ms)", width, height)
-    bar_gap = 16
-    bar_w = max(28, (x1 - x0) / max(1, len(names)) - bar_gap)
-
-    for t in range(6):
-        frac = t / 5.0
-        y = y0 - (y0 - y1) * frac
-        value = ymax * frac
-        body.append(f'<line x1="{x0}" y1="{y:.1f}" x2="{x1}" y2="{y:.1f}" class="grid"/>')
-        body.append(f'<text x="{x0 - 8}" y="{y + 4:.1f}" text-anchor="end">{value:.3g}</text>')
-
-    for i, name in enumerate(names):
-        cx = x0 + (i + 0.5) * (x1 - x0) / max(1, len(names))
-        bottom = y0
-        for pi, value in enumerate(values[i]):
-            h = value / ymax * (y0 - y1)
-            color = PALETTE[pi % len(PALETTE)]
-            body.append(f'<rect x="{cx - bar_w / 2:.1f}" y="{bottom - h:.1f}" width="{bar_w:.1f}" height="{h:.1f}" fill="{color}"/>')
-            bottom -= h
-        body.append(f'<text transform="translate({cx:.1f},{y0 + 26}) rotate(25)" text-anchor="start" class="legend">{html.escape(name)}</text>')
-
-    for pi, label in enumerate(phase_labels):
-        legend_y = y1 + pi * 18
-        color = PALETTE[pi % len(PALETTE)]
-        body.append(f'<rect x="{x1 + 24}" y="{legend_y - 9}" width="10" height="10" fill="{color}"/>')
-        body.append(f'<text x="{x1 + 40}" y="{legend_y}" class="legend">{html.escape(label)}</text>')
-    write_svg(out_path, body, width, height)
+def phase_time(rows, out_path):
+    variants = sorted(set(r["variant"] for r in rows))
+    w, h = 860, 460
+    lines = svg_begin(w, h)
+    lines.append('<text class="title" x="50" y="28">variant_vs_phase_time</text>')
+    phases = ["format_prepare_ms", "upcast_prepare_ms", "compute_ms"]
+    colors = ["#999999", "#ffbf00", "#2ca02c"]
+    totals = {}
+    max_total = 1.0
+    for v in variants:
+        group = [r for r in rows if r["variant"] == v]
+        vals = [median([float(r[p]) for r in group]) for p in phases]
+        totals[v] = vals
+        max_total = max(max_total, sum(vals))
+    x = 70
+    for v in variants:
+        y = 390
+        for val, color in zip(totals[v], colors):
+            height = val / max_total * 320.0
+            y -= height
+            lines.append('<rect x="%d" y="%.2f" width="80" height="%.2f" fill="%s"/>' % (x, y, height, color))
+        lines.append('<text transform="translate(%d,420) rotate(35)">%s</text>' % (x, v))
+        x += 180
+    lines.append('<text x="610" y="70">gray=format, yellow=upcast, green=compute</text>')
+    lines.extend(svg_end())
+    write_svg(out_path, lines)
 
 
 def threads_speedup(rows, out_path):
-    by_case = defaultdict(dict)
-    for row in rows:
-        key = (row["variant"], row["rank"], row["nnz"], row["mode"])
-        by_case[key].setdefault(int(row["thread_count"]), []).append(row["compute_ms"])
-
-    speedups = defaultdict(list)
-    for per_thread in by_case.values():
-        if 1 not in per_thread:
-            continue
-        baseline = median(per_thread[1])
-        if baseline <= 0.0 or not math.isfinite(baseline):
-            continue
-        for thread_count, values in per_thread.items():
-            t = median(values)
-            if t > 0.0:
-                speedups[thread_count].append(baseline / t)
-
-    series = {"median compute speedup": sorted((float(k), median(v)) for k, v in speedups.items())}
-    ideal_x = sorted(speedups)
-    if ideal_x:
-        series["ideal"] = [(float(x), float(x)) for x in ideal_x]
-    line_chart(series, "threads vs speedup", "threads", "speedup vs 1 thread", out_path)
+    base = [r for r in rows if r["variant"] == "factor_fp64_compute_fp64"]
+    if not base:
+        return
+    by_thread = {}
+    for r in base:
+        by_thread.setdefault(float(r["thread_count"]), []).append(float(r["compute_ms"]))
+    if not by_thread:
+        return
+    baseline_thread = min(by_thread)
+    t1 = median(by_thread[baseline_thread])
+    plot_rows = []
+    for t, vals in by_thread.items():
+        plot_rows.append({"variant": "fp64 baseline", "thread_count": str(t), "speedup": str(t1 / median(vals) if median(vals) else 0.0)})
+    line_plot(plot_rows, out_path, "thread_count", "speedup", "threads_vs_speedup", "speedup")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Plot sparse-dense TTM benchmark CSV results as SVG files.")
-    parser.add_argument("csv", type=Path, help="Input CSV produced by ttm_bench")
-    parser.add_argument("--out-dir", type=Path, default=Path("plots"), help="Output directory")
-    args = parser.parse_args()
+    if len(sys.argv) < 2:
+        print("usage: plot_kernel_results.py result.csv --out-dir DIR", file=sys.stderr)
+        return 2
+    path = sys.argv[1]
+    out_dir = "plots"
+    i = 2
+    while i < len(sys.argv):
+        if sys.argv[i] == "--out-dir" and i + 1 < len(sys.argv):
+            out_dir = sys.argv[i + 1]
+            i += 2
+        else:
+            print("unknown argument: %s" % sys.argv[i], file=sys.stderr)
+            return 2
 
-    rows = read_rows(args.csv)
-    if not rows:
-        raise SystemExit("CSV has no data rows")
-
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-    rank_vs_metric(rows, "total_ms", "rank vs median total_ms", "median total time (ms)", args.out_dir / "rank_vs_total_ms.svg")
-    rank_vs_metric(rows, "rel_error", "rank vs median rel_error", "median relative error", args.out_dir / "rank_vs_rel_error.svg", logy=True)
-    traffic_breakdown(rows, args.out_dir / "rank_vs_traffic_breakdown.svg")
-    variant_phase_bars(rows, args.out_dir / "variant_vs_phase_time.svg")
-    threads_speedup(rows, args.out_dir / "threads_vs_speedup.svg")
-    print(f"wrote SVG plots to {args.out_dir}")
+    ensure_dir(out_dir)
+    rows = load_rows(path)
+    line_plot(rows, os.path.join(out_dir, "rank_vs_total_ms.svg"), "rank", "total_ms", "rank_vs_total_ms", "total_ms")
+    line_plot(rows, os.path.join(out_dir, "rank_vs_rel_error.svg"), "rank", "rel_error", "rank_vs_rel_error", "rel_error")
+    traffic_breakdown(rows, os.path.join(out_dir, "rank_vs_traffic_breakdown.svg"))
+    phase_time(rows, os.path.join(out_dir, "variant_vs_phase_time.svg"))
+    threads_speedup(rows, os.path.join(out_dir, "threads_vs_speedup.svg"))
+    print("wrote SVG plots to %s" % out_dir)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

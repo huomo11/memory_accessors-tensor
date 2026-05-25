@@ -1,623 +1,407 @@
-#include <algorithm>
-#include <cerrno>
-#include <chrono>
-#include <cmath>
-#include <cstdint>
+#include "csv_writer.hpp"
+#include "dense_matrix.hpp"
+#include "metrics.hpp"
+#include "precision_policy.hpp"
+#include "sparse_tensor.hpp"
+#include "sp_ttm.hpp"
+#include "timer.hpp"
+
+#include <errno.h>
+#include <stdint.h>
 #include <cstdlib>
 #include <cstring>
-#include <exception>
-#include <fstream>
-#include <iomanip>
 #include <iostream>
-#include <limits>
-#include <numeric>
 #include <random>
 #include <sstream>
-#include <stdexcept>
-#include <stdint.h>
 #include <string>
-#include <thread>
-#include <type_traits>
 #include <vector>
 
-namespace {
+struct Options {
+    std::string output;
+    uint32_t dim0;
+    uint32_t dim1;
+    uint32_t dim2;
+    std::vector<uint64_t> nnzs;
+    std::vector<int> ranks;
+    std::vector<int> modes;
+    std::vector<int> thread_counts;
+    int active_threads;
+    int repeats;
+    uint64_t seed;
 
-using Clock = std::chrono::steady_clock;
-
-struct Args {
-    std::size_t dim0 = 128;
-    std::size_t dim1 = 128;
-    std::size_t dim2 = 128;
-    std::size_t nnz = 200000;
-    std::vector<int> modes{0, 1, 2};
-    std::vector<std::size_t> ranks{16, 32, 64};
-    int repeats = 3;
-    int threads = static_cast<int>(std::max(1u, std::thread::hardware_concurrency()));
-    uint64_t seed = 42;
-    std::string output = "results.csv";
+    Options()
+        : output("results/smoke.csv"), dim0(16), dim1(12), dim2(10),
+          active_threads(1), repeats(1), seed(42) {}
 };
 
-struct TensorCOO {
-    std::vector<uint32_t> i0;
-    std::vector<uint32_t> i1;
-    std::vector<uint32_t> i2;
-    std::vector<double> values64;
-    std::vector<float> values32;
-};
-
-struct PreparedEntry {
-    uint64_t row;
-    uint32_t k;
-    std::size_t nz;
-
-    PreparedEntry() : row(0), k(0), nz(0) {}
-
-    PreparedEntry(uint64_t row_, uint32_t k_, std::size_t nz_)
-        : row(row_), k(k_), nz(nz_) {}
-};
-
-struct Prepared {
-    std::vector<PreparedEntry> entries;
-    std::vector<std::size_t> row_starts;
-    std::vector<uint64_t> rows;
-    std::size_t row_count = 0;
-    double format_prepare_ms = 0.0;
-};
-
-struct Metrics {
-    double total_ms = 0.0;
-    double format_prepare_ms = 0.0;
-    double upcast_prepare_ms = 0.0;
-    double compute_ms = 0.0;
-    std::size_t index_storage_bytes = 0;
-    std::size_t value_storage_bytes = 0;
-    std::size_t factor_storage_bytes = 0;
-    std::size_t output_storage_bytes = 0;
-    std::size_t index_logical_read_bytes = 0;
-    std::size_t value_logical_read_bytes = 0;
-    std::size_t factor_logical_read_bytes = 0;
-    std::size_t output_logical_write_bytes = 0;
-    double rel_error = 0.0;
-};
-
-enum class FactorStorage {
-    Fp64,
-    Fp32,
-};
-
-enum class ValueStorage {
-    Fp64,
-    Fp32,
-};
-
-enum class ComputeType {
-    Fp64,
-    Fp32,
-};
-
-struct Variant {
-    std::string name;
-    FactorStorage factor_storage;
-    ValueStorage value_storage;
-    ComputeType compute_type;
-};
-
-double ms_since(const Clock::time_point start, const Clock::time_point end) {
-    return std::chrono::duration<double, std::milli>(end - start).count();
+static bool parse_long_checked(const char* text, long* value) {
+    char* end = 0;
+    errno = 0;
+    long v = std::strtol(text, &end, 10);
+    if (errno != 0 || end == text || *end != '\0') {
+        return false;
+    }
+    *value = v;
+    return true;
 }
 
-std::vector<std::string> split(const std::string& s, const char delim) {
+static bool parse_ull_checked(const char* text, uint64_t* value) {
+    char* end = 0;
+    errno = 0;
+    unsigned long long v = std::strtoull(text, &end, 10);
+    if (errno != 0 || end == text || *end != '\0') {
+        return false;
+    }
+    *value = (uint64_t)v;
+    return true;
+}
+
+static std::vector<std::string> split_commas(const std::string& s) {
     std::vector<std::string> out;
-    std::stringstream ss(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-        if (!item.empty()) {
-            out.push_back(item);
-        }
-    }
-    return out;
-}
-
-static unsigned long long parse_ull_arg(const std::string& s, const std::string& name) {
-    if (!s.empty() && s[0] == '-') {
-        throw std::runtime_error("Invalid unsigned integer for " + name + ": " + s);
-    }
-
-    char* end = nullptr;
-    errno = 0;
-    const unsigned long long value = std::strtoull(s.c_str(), &end, 10);
-
-    if (errno != 0 || end == s.c_str() || *end != '\0') {
-        throw std::runtime_error("Invalid unsigned integer for " + name + ": " + s);
-    }
-    return value;
-}
-
-static std::size_t parse_size_arg(const std::string& s, const std::string& name) {
-    const unsigned long long value = parse_ull_arg(s, name);
-    if (value > static_cast<unsigned long long>(std::numeric_limits<std::size_t>::max())) {
-        throw std::runtime_error("Integer out of range for " + name + ": " + s);
-    }
-    return static_cast<std::size_t>(value);
-}
-
-static uint64_t parse_uint64_arg(const std::string& s, const std::string& name) {
-    const unsigned long long value = parse_ull_arg(s, name);
-    if (value > static_cast<unsigned long long>(std::numeric_limits<uint64_t>::max())) {
-        throw std::runtime_error("Integer out of range for " + name + ": " + s);
-    }
-    return static_cast<uint64_t>(value);
-}
-
-std::vector<std::size_t> parse_size_list(const std::string& text, const std::string& name) {
-    std::vector<std::size_t> out;
-    for (const auto& part : split(text, ',')) {
-        out.push_back(parse_size_arg(part, name));
-    }
-    if (out.empty()) {
-        throw std::runtime_error("empty integer list: " + text);
-    }
-    return out;
-}
-
-static int parse_int_arg(const std::string& s, const std::string& name) {
-    char* end = nullptr;
-    errno = 0;
-    const long value = std::strtol(s.c_str(), &end, 10);
-
-    if (errno != 0 || end == s.c_str() || *end != '\0') {
-        throw std::runtime_error("Invalid integer for " + name + ": " + s);
-    }
-    if (value < std::numeric_limits<int>::min() ||
-        value > std::numeric_limits<int>::max()) {
-        throw std::runtime_error("Integer out of range for " + name + ": " + s);
-    }
-    return static_cast<int>(value);
-}
-
-std::vector<int> parse_int_list(const std::string& text, const std::string& name) {
-    std::vector<int> out;
-    for (const auto& part : split(text, ',')) {
-        out.push_back(parse_int_arg(part, name));
-    }
-    if (out.empty()) {
-        throw std::runtime_error("empty integer list: " + text);
-    }
-    return out;
-}
-
-Args parse_args(int argc, char** argv) {
-    Args args;
-    for (int i = 1; i < argc; ++i) {
-        const std::string key = argv[i];
-        auto need_value = [&](const std::string& option) -> std::string {
-            if (i + 1 >= argc) {
-                throw std::runtime_error("missing value for " + option);
-            }
-            return argv[++i];
-        };
-
-        if (key == "--dims") {
-            const auto dims = parse_size_list(need_value(key), key);
-            if (dims.size() != 3) {
-                throw std::runtime_error("--dims expects exactly three comma-separated dimensions");
-            }
-            args.dim0 = dims[0];
-            args.dim1 = dims[1];
-            args.dim2 = dims[2];
-        } else if (key == "--nnz") {
-            args.nnz = parse_size_arg(need_value(key), key);
-        } else if (key == "--ranks") {
-            args.ranks = parse_size_list(need_value(key), key);
-        } else if (key == "--modes") {
-            args.modes = parse_int_list(need_value(key), key);
-        } else if (key == "--threads") {
-            args.threads = std::max(1, parse_int_arg(need_value(key), key));
-        } else if (key == "--repeats") {
-            args.repeats = std::max(1, parse_int_arg(need_value(key), key));
-        } else if (key == "--seed") {
-            args.seed = parse_uint64_arg(need_value(key), key);
-        } else if (key == "--output") {
-            args.output = need_value(key);
-        } else if (key == "--help" || key == "-h") {
-            std::cout
-                << "Usage: ttm_bench [options]\n"
-                << "  --dims D0,D1,D2       Tensor dimensions, default 128,128,128\n"
-                << "  --nnz N               Number of COO nonzeros, default 200000\n"
-                << "  --ranks R0,R1,...     Factor ranks, default 16,32,64\n"
-                << "  --modes M0,M1,...     Modes to test, default 0,1,2\n"
-                << "  --threads T           Worker threads, default hardware_concurrency\n"
-                << "  --repeats N           Repeats per case, default 3\n"
-                << "  --seed S              RNG seed, default 42\n"
-                << "  --output PATH         CSV output path, default results.csv\n";
-            std::exit(0);
+    std::string cur;
+    size_t i;
+    for (i = 0; i < s.size(); ++i) {
+        if (s[i] == ',') {
+            out.push_back(cur);
+            cur.clear();
         } else {
-            throw std::runtime_error("unknown option: " + key);
+            cur.push_back(s[i]);
         }
     }
+    out.push_back(cur);
+    return out;
+}
 
-    if (args.dim0 == 0 || args.dim1 == 0 || args.dim2 == 0) {
-        throw std::runtime_error("all dimensions must be positive");
+static bool parse_int_list(const std::string& text, std::vector<int>* out) {
+    std::vector<std::string> parts = split_commas(text);
+    out->clear();
+    size_t i;
+    for (i = 0; i < parts.size(); ++i) {
+        long v = 0;
+        if (!parse_long_checked(parts[i].c_str(), &v)) {
+            return false;
+        }
+        out->push_back((int)v);
     }
-    if (args.nnz == 0) {
-        throw std::runtime_error("--nnz must be positive");
+    return true;
+}
+
+static bool parse_ull_list(const std::string& text, std::vector<uint64_t>* out) {
+    std::vector<std::string> parts = split_commas(text);
+    out->clear();
+    size_t i;
+    for (i = 0; i < parts.size(); ++i) {
+        uint64_t v = 0;
+        if (!parse_ull_checked(parts[i].c_str(), &v)) {
+            return false;
+        }
+        out->push_back(v);
     }
-    for (const int mode : args.modes) {
-        if (mode < 0 || mode > 2) {
-            throw std::runtime_error("--modes values must be 0, 1, or 2");
+    return true;
+}
+
+static bool parse_dims(const std::string& text, uint32_t* d0, uint32_t* d1, uint32_t* d2) {
+    std::vector<std::string> parts = split_commas(text);
+    if (parts.size() != 3) {
+        return false;
+    }
+    long vals[3];
+    int i;
+    for (i = 0; i < 3; ++i) {
+        if (!parse_long_checked(parts[(size_t)i].c_str(), &vals[i]) || vals[i] <= 0) {
+            return false;
         }
     }
-    for (const std::size_t rank : args.ranks) {
-        if (rank == 0) {
-            throw std::runtime_error("--ranks values must be positive");
+    *d0 = (uint32_t)vals[0];
+    *d1 = (uint32_t)vals[1];
+    *d2 = (uint32_t)vals[2];
+    return true;
+}
+
+static void usage() {
+    std::cerr << "Usage: ttm_bench --output out.csv --dims I,J,K --nnz N "
+              << "--ranks r1,r2 --modes 0,1,2 --threads T --repeats R --seed S\n";
+}
+
+static bool parse_args(int argc, char** argv, Options* opt) {
+    int i = 1;
+    while (i < argc) {
+        if (i + 1 >= argc) {
+            return false;
         }
-    }
-    return args;
-}
-
-std::size_t mode_dim(const Args& args, const int mode) {
-    if (mode == 0) {
-        return args.dim0;
-    }
-    if (mode == 1) {
-        return args.dim1;
-    }
-    return args.dim2;
-}
-
-std::size_t output_rows_for_mode(const Args& args, const int mode) {
-    if (mode == 0) {
-        return args.dim1 * args.dim2;
-    }
-    if (mode == 1) {
-        return args.dim0 * args.dim2;
-    }
-    return args.dim0 * args.dim1;
-}
-
-TensorCOO generate_tensor(const Args& args) {
-    TensorCOO tensor;
-    tensor.i0.resize(args.nnz);
-    tensor.i1.resize(args.nnz);
-    tensor.i2.resize(args.nnz);
-    tensor.values64.resize(args.nnz);
-    tensor.values32.resize(args.nnz);
-
-    std::mt19937_64 rng(args.seed);
-    std::uniform_int_distribution<uint32_t> d0(0, static_cast<uint32_t>(args.dim0 - 1));
-    std::uniform_int_distribution<uint32_t> d1(0, static_cast<uint32_t>(args.dim1 - 1));
-    std::uniform_int_distribution<uint32_t> d2(0, static_cast<uint32_t>(args.dim2 - 1));
-    std::uniform_real_distribution<double> value_dist(-1.0, 1.0);
-
-    for (std::size_t nz = 0; nz < args.nnz; ++nz) {
-        tensor.i0[nz] = d0(rng);
-        tensor.i1[nz] = d1(rng);
-        tensor.i2[nz] = d2(rng);
-        tensor.values64[nz] = value_dist(rng);
-        tensor.values32[nz] = static_cast<float>(tensor.values64[nz]);
-    }
-    return tensor;
-}
-
-std::vector<double> generate_factor64(const std::size_t dim, const std::size_t rank, const uint64_t seed) {
-    std::vector<double> factor(dim * rank);
-    std::mt19937_64 rng(seed);
-    std::normal_distribution<double> dist(0.0, 1.0 / std::sqrt(static_cast<double>(rank)));
-    for (double& x : factor) {
-        x = dist(rng);
-    }
-    return factor;
-}
-
-std::vector<float> to_float(const std::vector<double>& input) {
-    std::vector<float> output(input.size());
-    std::transform(input.begin(), input.end(), output.begin(), [](const double x) {
-        return static_cast<float>(x);
-    });
-    return output;
-}
-
-uint64_t output_row(const TensorCOO& tensor, const Args& args, const int mode, const std::size_t nz) {
-    if (mode == 0) {
-        return static_cast<uint64_t>(tensor.i1[nz]) * args.dim2 + tensor.i2[nz];
-    }
-    if (mode == 1) {
-        return static_cast<uint64_t>(tensor.i0[nz]) * args.dim2 + tensor.i2[nz];
-    }
-    return static_cast<uint64_t>(tensor.i0[nz]) * args.dim1 + tensor.i1[nz];
-}
-
-uint32_t mode_index(const TensorCOO& tensor, const int mode, const std::size_t nz) {
-    if (mode == 0) {
-        return tensor.i0[nz];
-    }
-    if (mode == 1) {
-        return tensor.i1[nz];
-    }
-    return tensor.i2[nz];
-}
-
-Prepared prepare_entries(const TensorCOO& tensor, const Args& args, const int mode) {
-    const auto start = Clock::now();
-
-    Prepared prepared;
-    prepared.entries.resize(tensor.values64.size());
-    prepared.row_count = output_rows_for_mode(args, mode);
-
-    for (std::size_t nz = 0; nz < tensor.values64.size(); ++nz) {
-        prepared.entries[nz] = PreparedEntry(output_row(tensor, args, mode, nz), mode_index(tensor, mode, nz), nz);
-    }
-
-    std::sort(prepared.entries.begin(), prepared.entries.end(), [](const PreparedEntry& a, const PreparedEntry& b) {
-        if (a.row != b.row) {
-            return a.row < b.row;
-        }
-        return a.k < b.k;
-    });
-
-    prepared.rows.reserve(prepared.entries.size());
-    prepared.row_starts.push_back(0);
-    for (std::size_t i = 0; i < prepared.entries.size(); ++i) {
-        if (i == 0 || prepared.entries[i].row != prepared.entries[i - 1].row) {
-            if (i != 0) {
-                prepared.row_starts.push_back(i);
+        std::string key(argv[i]);
+        std::string val(argv[i + 1]);
+        if (key == "--output") {
+            opt->output = val;
+        } else if (key == "--dims") {
+            if (!parse_dims(val, &opt->dim0, &opt->dim1, &opt->dim2)) {
+                return false;
             }
-            prepared.rows.push_back(prepared.entries[i].row);
-        }
-    }
-    prepared.row_starts.push_back(prepared.entries.size());
-
-    prepared.format_prepare_ms = ms_since(start, Clock::now());
-    return prepared;
-}
-
-std::vector<std::size_t> partition_rows(const std::size_t rows, const int threads) {
-    const std::size_t worker_count = std::min<std::size_t>(std::max(1, threads), std::max<std::size_t>(1, rows));
-    std::vector<std::size_t> cuts(worker_count + 1, 0);
-    for (std::size_t t = 0; t <= worker_count; ++t) {
-        cuts[t] = (rows * t) / worker_count;
-    }
-    return cuts;
-}
-
-template <typename ValueT, typename FactorT, typename AccumT>
-void compute_rows(
-    const ValueT* values,
-    const Prepared& prepared,
-    const FactorT* factor,
-    const std::vector<std::size_t>& cuts,
-    const std::size_t rank,
-    std::vector<AccumT>& output) {
-
-    auto worker = [&](const std::size_t begin_row_idx, const std::size_t end_row_idx) {
-        for (std::size_t row_idx = begin_row_idx; row_idx < end_row_idx; ++row_idx) {
-            const uint64_t row = prepared.rows[row_idx];
-            AccumT* out = output.data() + static_cast<std::size_t>(row) * rank;
-            const std::size_t begin = prepared.row_starts[row_idx];
-            const std::size_t end = prepared.row_starts[row_idx + 1];
-
-            for (std::size_t p = begin; p < end; ++p) {
-                const PreparedEntry& entry = prepared.entries[p];
-                const AccumT value = static_cast<AccumT>(values[entry.nz]);
-                const FactorT* factor_row = factor + static_cast<std::size_t>(entry.k) * rank;
-                for (std::size_t r = 0; r < rank; ++r) {
-                    out[r] += value * static_cast<AccumT>(factor_row[r]);
+        } else if (key == "--nnz") {
+            if (!parse_ull_list(val, &opt->nnzs)) {
+                return false;
+            }
+        } else if (key == "--ranks") {
+            if (!parse_int_list(val, &opt->ranks)) {
+                return false;
+            }
+        } else if (key == "--modes") {
+            if (!parse_int_list(val, &opt->modes)) {
+                return false;
+            }
+        } else if (key == "--threads") {
+            if (!parse_int_list(val, &opt->thread_counts)) {
+                return false;
+            }
+            size_t ti;
+            for (ti = 0; ti < opt->thread_counts.size(); ++ti) {
+                if (opt->thread_counts[ti] < 1) {
+                    return false;
                 }
             }
+        } else if (key == "--repeats") {
+            long tmp = 0;
+            if (!parse_long_checked(val.c_str(), &tmp) || tmp < 1) {
+                return false;
+            }
+            opt->repeats = (int)tmp;
+        } else if (key == "--seed") {
+            if (!parse_ull_checked(val.c_str(), &opt->seed)) {
+                return false;
+            }
+        } else {
+            return false;
         }
-    };
-
-    std::vector<std::thread> pool;
-    pool.reserve(cuts.size() - 1);
-    for (std::size_t t = 0; t + 1 < cuts.size(); ++t) {
-        pool.emplace_back(worker, cuts[t], cuts[t + 1]);
+        i += 2;
     }
-    for (auto& th : pool) {
-        th.join();
+    if (opt->ranks.empty()) {
+        opt->ranks.push_back(4);
     }
+    if (opt->modes.empty()) {
+        opt->modes.push_back(0);
+    }
+    if (opt->nnzs.empty()) {
+        opt->nnzs.push_back(1000);
+    }
+    if (opt->thread_counts.empty()) {
+        opt->thread_counts.push_back(1);
+    }
+    return true;
 }
 
-template <typename ValueT, typename FactorT, typename AccumT>
-double compute_once(
-    const ValueT* values,
-    const Prepared& prepared,
-    const FactorT* factor,
-    const std::size_t rank,
-    const int threads,
-    std::vector<AccumT>& output) {
-
-    std::fill(output.begin(), output.end(), AccumT{0});
-    const std::vector<std::size_t> cuts = partition_rows(prepared.rows.size(), threads);
-    const auto start = Clock::now();
-    compute_rows<ValueT, FactorT, AccumT>(values, prepared, factor, cuts, rank, output);
-    return ms_since(start, Clock::now());
+static DenseMatrix<double> generate_factor_double(size_t rows, size_t cols, uint64_t seed) {
+    DenseMatrix<double> f(rows, cols);
+    std::mt19937_64 rng(seed);
+    std::uniform_real_distribution<double> dist(-1.0, 1.0);
+    size_t i;
+    for (i = 0; i < f.size(); ++i) {
+        f.values()[i] = dist(rng);
+    }
+    return f;
 }
 
-template <typename SourceT>
-double upcast_to_double(const std::vector<SourceT>& source, std::vector<double>& workspace) {
-    const auto start = Clock::now();
-    workspace.resize(source.size());
-    std::transform(source.begin(), source.end(), workspace.begin(), [](const SourceT x) {
-        return static_cast<double>(x);
-    });
-    return ms_since(start, Clock::now());
+template <typename OutT, typename InT>
+static std::vector<OutT> convert_values(const std::vector<InT>& in) {
+    std::vector<OutT> out(in.size());
+    size_t i;
+    for (i = 0; i < in.size(); ++i) {
+        out[i] = (OutT)in[i];
+    }
+    return out;
 }
 
-double relative_error(const std::vector<double>& reference, const std::vector<double>& candidate) {
-    long double diff2 = 0.0;
-    long double ref2 = 0.0;
-    for (std::size_t i = 0; i < reference.size(); ++i) {
-        const long double d = static_cast<long double>(candidate[i]) - reference[i];
-        diff2 += d * d;
-        ref2 += static_cast<long double>(reference[i]) * reference[i];
+template <typename OutT, typename InT>
+static DenseMatrix<OutT> convert_factor(const DenseMatrix<InT>& in) {
+    DenseMatrix<OutT> out(in.rows(), in.cols());
+    size_t i;
+    for (i = 0; i < in.size(); ++i) {
+        out.values()[i] = (OutT)in.values()[i];
     }
-    if (ref2 == 0.0L) {
-        return diff2 == 0.0L ? 0.0 : std::numeric_limits<double>::infinity();
-    }
-    return static_cast<double>(std::sqrt(diff2 / ref2));
+    return out;
 }
 
-double relative_error_float_output(const std::vector<double>& reference, const std::vector<float>& candidate) {
-    long double diff2 = 0.0;
-    long double ref2 = 0.0;
-    for (std::size_t i = 0; i < reference.size(); ++i) {
-        const long double d = static_cast<long double>(candidate[i]) - reference[i];
-        diff2 += d * d;
-        ref2 += static_cast<long double>(reference[i]) * reference[i];
+static std::vector<double> tensor_values_double(const SparseTensorCOO& x) {
+    std::vector<double> vals(x.entries.size());
+    size_t i;
+    for (i = 0; i < x.entries.size(); ++i) {
+        vals[i] = x.entries[i].value;
     }
-    if (ref2 == 0.0L) {
-        return diff2 == 0.0L ? 0.0 : std::numeric_limits<double>::infinity();
-    }
-    return static_cast<double>(std::sqrt(diff2 / ref2));
+    return vals;
 }
 
-Metrics run_variant(
-    const Variant& variant,
-    const TensorCOO& tensor,
-    const Prepared& prepared,
-    const Args& args,
-    const int mode,
-    const std::size_t rank,
-    const std::vector<double>& factor64,
-    const std::vector<float>& factor32,
-    const std::vector<double>& reference) {
+static MetricsRow make_metric_base(const Options& opt, const PreparedTTM& prep,
+                                   VariantKind variant, int rank, int mode,
+                                   int repeat, double format_ms) {
+    MetricsRow row;
+    uint64_t nnz = (uint64_t)prep.entries.size();
+    uint64_t out_elems = (uint64_t)prep.output_rows * (uint64_t)rank;
+    uint64_t factor_elems = (uint64_t)prep.factor_rows * (uint64_t)rank;
+    size_t value_size = variant_value_storage_size(variant);
+    size_t factor_size = variant_factor_storage_size(variant);
+    size_t output_size = variant_output_storage_size(variant);
 
-    const std::size_t output_size = prepared.row_count * rank;
-    const std::size_t factor_dim = mode_dim(args, mode);
-    const std::size_t value_type_bytes = variant.value_storage == ValueStorage::Fp64 ? sizeof(double) : sizeof(float);
-    const std::size_t factor_type_bytes = variant.factor_storage == FactorStorage::Fp64 ? sizeof(double) : sizeof(float);
-    const std::size_t output_type_bytes = variant.compute_type == ComputeType::Fp64 ? sizeof(double) : sizeof(float);
+    row.format_prepare_ms = format_ms;
+    row.index_storage_bytes = nnz * 3ULL * (uint64_t)sizeof(uint32_t);
+    row.value_storage_bytes = nnz * (uint64_t)value_size;
+    row.factor_storage_bytes = factor_elems * (uint64_t)factor_size;
+    row.output_storage_bytes = out_elems * (uint64_t)output_size;
+    row.index_logical_read_bytes = nnz * 3ULL * (uint64_t)sizeof(uint32_t);
+    row.value_logical_read_bytes = nnz * (uint64_t)value_size;
+    row.factor_logical_read_bytes = nnz * (uint64_t)rank * (uint64_t)factor_size;
+    {
+        uint64_t streamed = nnz * (uint64_t)rank * (uint64_t)output_size;
+        row.output_logical_write_bytes = row.output_storage_bytes > streamed
+            ? row.output_storage_bytes : streamed;
+    }
+    row.rank = rank;
+    row.nnz = nnz;
+    row.mode = mode;
+    row.thread_count = opt.active_threads;
+    row.seed = opt.seed;
+    row.variant = variant_name(variant);
+    row.dim0 = opt.dim0;
+    row.dim1 = opt.dim1;
+    row.dim2 = opt.dim2;
+    row.repeat = repeat;
+    return row;
+}
 
-    Metrics m;
-    m.format_prepare_ms = prepared.format_prepare_ms;
-    m.index_storage_bytes = args.nnz * 3 * sizeof(uint32_t);
-    m.value_storage_bytes = args.nnz * value_type_bytes;
-    m.factor_storage_bytes = factor_dim * rank * factor_type_bytes;
-    m.output_storage_bytes = output_size * output_type_bytes;
-    m.index_logical_read_bytes = args.nnz * 3 * sizeof(uint32_t);
-    m.value_logical_read_bytes = args.nnz * value_type_bytes;
-    m.factor_logical_read_bytes = args.nnz * rank * factor_type_bytes;
-    m.output_logical_write_bytes = std::max(m.output_storage_bytes, args.nnz * rank * output_type_bytes);
+static MetricsRow run_variant(const Options& opt,
+                              const PreparedTTM& prep,
+                              double format_ms,
+                              const std::vector<double>& values64,
+                              const DenseMatrix<double>& factor64,
+                              VariantKind variant,
+                              int rank,
+                              int mode,
+                              int repeat,
+                              const std::vector<double>& baseline) {
+    MetricsRow row = make_metric_base(opt, prep, variant, rank, mode, repeat, format_ms);
+    Timer timer;
+    std::vector<double> out64;
 
-    if (variant.compute_type == ComputeType::Fp32) {
-        std::vector<float> output(output_size);
-        m.compute_ms = compute_once<double, float, float>(tensor.values64.data(), prepared, factor32.data(), rank, args.threads, output);
-        m.rel_error = relative_error_float_output(reference, output);
-    } else if (variant.value_storage == ValueStorage::Fp32) {
-        std::vector<double> value_workspace;
-        m.upcast_prepare_ms += upcast_to_double(tensor.values32, value_workspace);
-        std::vector<double> output(output_size);
-        m.compute_ms = compute_once<double, double, double>(value_workspace.data(), prepared, factor64.data(), rank, args.threads, output);
-        m.rel_error = relative_error(reference, output);
-    } else if (variant.factor_storage == FactorStorage::Fp32) {
-        std::vector<double> factor_workspace;
-        m.upcast_prepare_ms += upcast_to_double(factor32, factor_workspace);
-        std::vector<double> output(output_size);
-        m.compute_ms = compute_once<double, double, double>(tensor.values64.data(), prepared, factor_workspace.data(), rank, args.threads, output);
-        m.rel_error = relative_error(reference, output);
+    if (variant == VAR_FACTOR_FP64_COMPUTE_FP64) {
+        row.upcast_prepare_ms = 0.0;
+        timer.reset();
+        compute_ttm_threaded<double, double, double>(prep, values64, factor64,
+                                                     (size_t)rank, opt.active_threads, &out64);
+        row.compute_ms = timer.elapsed_ms();
+    } else if (variant == VAR_FACTOR_FP32_COMPUTE_FP64) {
+        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
+        timer.reset();
+        DenseMatrix<double> factor_workspace = convert_factor<double>(factor32);
+        row.upcast_prepare_ms = timer.elapsed_ms();
+        timer.reset();
+        compute_ttm_threaded<double, double, double>(prep, values64, factor_workspace,
+                                                     (size_t)rank, opt.active_threads, &out64);
+        row.compute_ms = timer.elapsed_ms();
+    } else if (variant == VAR_FACTOR_FP32_COMPUTE_FP32) {
+        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
+        std::vector<float> values32 = convert_values<float>(values64);
+        std::vector<float> outf;
+        row.upcast_prepare_ms = 0.0;
+        timer.reset();
+        compute_ttm_threaded<float, float, float>(prep, values32, factor32,
+                                                  (size_t)rank, opt.active_threads, &outf);
+        row.compute_ms = timer.elapsed_ms();
+        copy_as_double(outf, &out64);
+    } else if (variant == VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64) {
+        std::vector<float> values32 = convert_values<float>(values64);
+        timer.reset();
+        std::vector<double> value_workspace = convert_values<double>(values32);
+        row.upcast_prepare_ms = timer.elapsed_ms();
+        timer.reset();
+        compute_ttm_threaded<double, double, double>(prep, value_workspace, factor64,
+                                                     (size_t)rank, opt.active_threads, &out64);
+        row.compute_ms = timer.elapsed_ms();
+    }
+
+    row.total_ms = row.format_prepare_ms + row.upcast_prepare_ms + row.compute_ms;
+    if (variant == VAR_FACTOR_FP64_COMPUTE_FP64) {
+        row.rel_error = 0.0;
     } else {
-        std::vector<double> output(output_size);
-        m.compute_ms = compute_once<double, double, double>(tensor.values64.data(), prepared, factor64.data(), rank, args.threads, output);
-        m.rel_error = relative_error(reference, output);
+        row.rel_error = relative_frobenius_error(out64, baseline);
     }
-
-    m.total_ms = m.format_prepare_ms + m.upcast_prepare_ms + m.compute_ms;
-    return m;
+    return row;
 }
-
-std::vector<double> compute_reference(
-    const TensorCOO& tensor,
-    const Prepared& prepared,
-    const std::vector<double>& factor64,
-    const std::size_t rank,
-    const int threads) {
-
-    std::vector<double> reference(prepared.row_count * rank);
-    compute_once<double, double, double>(tensor.values64.data(), prepared, factor64.data(), rank, threads, reference);
-    return reference;
-}
-
-void write_csv_header(std::ofstream& out) {
-    out << "total_ms,format_prepare_ms,upcast_prepare_ms,compute_ms,"
-        << "index_storage_bytes,value_storage_bytes,factor_storage_bytes,output_storage_bytes,"
-        << "index_logical_read_bytes,value_logical_read_bytes,factor_logical_read_bytes,output_logical_write_bytes,"
-        << "rel_error,rank,nnz,mode,thread_count,seed,variant,dim0,dim1,dim2,repeat\n";
-}
-
-void write_csv_row(
-    std::ofstream& out,
-    const Variant& variant,
-    const Metrics& m,
-    const Args& args,
-    const std::size_t rank,
-    const int mode,
-    const int repeat) {
-
-    out << std::setprecision(9) << m.total_ms << ','
-        << m.format_prepare_ms << ','
-        << m.upcast_prepare_ms << ','
-        << m.compute_ms << ','
-        << m.index_storage_bytes << ','
-        << m.value_storage_bytes << ','
-        << m.factor_storage_bytes << ','
-        << m.output_storage_bytes << ','
-        << m.index_logical_read_bytes << ','
-        << m.value_logical_read_bytes << ','
-        << m.factor_logical_read_bytes << ','
-        << m.output_logical_write_bytes << ','
-        << std::scientific << m.rel_error << ',';
-    out.unsetf(std::ios_base::floatfield);
-    out << rank << ','
-        << args.nnz << ','
-        << mode << ','
-        << args.threads << ','
-        << args.seed << ','
-        << variant.name << ','
-        << args.dim0 << ','
-        << args.dim1 << ','
-        << args.dim2 << ','
-        << repeat << '\n';
-}
-
-} // namespace
 
 int main(int argc, char** argv) {
-    try {
-        const Args args = parse_args(argc, argv);
-        const TensorCOO tensor = generate_tensor(args);
-        const std::vector<Variant> variants{
-            {"factor_fp64_compute_fp64", FactorStorage::Fp64, ValueStorage::Fp64, ComputeType::Fp64},
-            {"factor_fp32_compute_fp64", FactorStorage::Fp32, ValueStorage::Fp64, ComputeType::Fp64},
-            {"factor_fp32_compute_fp32", FactorStorage::Fp32, ValueStorage::Fp64, ComputeType::Fp32},
-            {"value_fp32_factor_fp64_compute_fp64", FactorStorage::Fp64, ValueStorage::Fp32, ComputeType::Fp64},
-        };
+    Options opt;
+    if (!parse_args(argc, argv, &opt)) {
+        usage();
+        return 2;
+    }
 
-        std::ofstream out(args.output.c_str());
-        if (!out) {
-            throw std::runtime_error("failed to open output file: " + args.output);
-        }
-        write_csv_header(out);
+    CsvWriter csv(opt.output);
+    if (!csv.good()) {
+        std::cerr << "Failed to open output CSV: " << opt.output << "\n";
+        return 1;
+    }
 
-        for (const int mode : args.modes) {
-            const Prepared prepared = prepare_entries(tensor, args, mode);
-            for (const std::size_t rank : args.ranks) {
-                const std::vector<double> factor64 = generate_factor64(mode_dim(args, mode), rank, args.seed + 1009 * (mode + 1) + rank);
-                const std::vector<float> factor32 = to_float(factor64);
+    size_t ni;
+    for (ni = 0; ni < opt.nnzs.size(); ++ni) {
+        SparseTensorCOO x = generate_random_tensor(opt.dim0, opt.dim1, opt.dim2,
+                                                   (size_t)opt.nnzs[ni], opt.seed + (uint64_t)ni);
+        std::vector<double> values64 = tensor_values_double(x);
 
-                for (int repeat = 0; repeat < args.repeats; ++repeat) {
-                    const std::vector<double> reference = compute_reference(tensor, prepared, factor64, rank, args.threads);
-                    for (const Variant& variant : variants) {
-                        Metrics m = run_variant(variant, tensor, prepared, args, mode, rank, factor64, factor32, reference);
-                        write_csv_row(out, variant, m, args, rank, mode, repeat);
+        size_t mi;
+        for (mi = 0; mi < opt.modes.size(); ++mi) {
+            int mode = opt.modes[mi];
+            if (mode < 0 || mode > 2) {
+                std::cerr << "Invalid mode: " << mode << "\n";
+                return 2;
+            }
+
+            Timer prep_timer;
+            PreparedTTM prep = prepare_ttm(x, mode);
+            double format_ms = prep_timer.elapsed_ms();
+
+            size_t ri;
+            for (ri = 0; ri < opt.ranks.size(); ++ri) {
+                int rank = opt.ranks[ri];
+                if (rank <= 0) {
+                    std::cerr << "Invalid rank: " << rank << "\n";
+                    return 2;
+                }
+                DenseMatrix<double> factor64 =
+                    generate_factor_double((size_t)prep.factor_rows, (size_t)rank,
+                                           opt.seed + (uint64_t)mode * 1000003ULL + (uint64_t)rank);
+
+                size_t ti;
+                for (ti = 0; ti < opt.thread_counts.size(); ++ti) {
+                    opt.active_threads = opt.thread_counts[ti];
+
+                    int rep;
+                    for (rep = 0; rep < opt.repeats; ++rep) {
+                        std::vector<double> baseline;
+                        Timer compute_timer;
+                        compute_ttm_threaded<double, double, double>(prep, values64, factor64,
+                                                                     (size_t)rank, opt.active_threads, &baseline);
+                        double baseline_compute_ms = compute_timer.elapsed_ms();
+
+                        MetricsRow base = make_metric_base(opt, prep, VAR_FACTOR_FP64_COMPUTE_FP64,
+                                                           rank, mode, rep, format_ms);
+                        base.compute_ms = baseline_compute_ms;
+                        base.upcast_prepare_ms = 0.0;
+                        base.total_ms = base.format_prepare_ms + base.compute_ms;
+                        base.rel_error = 0.0;
+                        csv.write(base);
+
+                        VariantKind vars[3];
+                        vars[0] = VAR_FACTOR_FP32_COMPUTE_FP64;
+                        vars[1] = VAR_FACTOR_FP32_COMPUTE_FP32;
+                        vars[2] = VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64;
+                        int vi;
+                        for (vi = 0; vi < 3; ++vi) {
+                            MetricsRow row = run_variant(opt, prep, format_ms, values64, factor64,
+                                                         vars[vi], rank, mode, rep, baseline);
+                            csv.write(row);
+                        }
                     }
                 }
             }
         }
-
-        std::cout << "wrote " << args.output << '\n';
-        return 0;
-    } catch (const std::exception& e) {
-        std::cerr << "error: " << e.what() << '\n';
-        return 1;
     }
+
+    return 0;
 }
