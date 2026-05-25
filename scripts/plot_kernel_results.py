@@ -12,6 +12,7 @@ COLORS = {
     "factor_fp32_compute_fp64": "#2ca02c",
     "factor_fp32_global_upcast_compute_fp64": "#2ca02c",
     "factor_fp32_onfly_compute_fp64": "#17becf",
+    "factor_fp32_blocked_compute_fp64": "#ff7f0e",
     "factor_fp32_compute_fp32": "#d62728",
     "value_fp32_factor_fp64_compute_fp64": "#9467bd",
 }

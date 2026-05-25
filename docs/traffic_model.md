@@ -40,4 +40,6 @@ output_logical_write_bytes = max(output_storage_bytes, nnz * rank * sizeof(outpu
 
 The Stage 1.5 benchmark separates storage-side factor traffic from compute-side factor traffic. The global-upcast fp32/fp64 variant stores fp32 factors but computes from a whole fp64 workspace, so its compute-side factor reads are fp64. The on-the-fly fp32/fp64 variant reads fp32 factors in the compute loop and casts each element to double before multiply-add.
 
+The Stage 2 blocked accessor keeps fp32 factor storage and upcasts one factor-row tile to a fp64 workspace. Its storage-side and compute-side factor read estimate remains `nnz * rank * sizeof(float)`, while `tile_workspace_bytes = min(tile_rows, factor_rows) * rank * sizeof(double)` records the temporary fp64 workspace footprint.
+
 Stage 2 will measure block-wise factor accessor traffic more directly.

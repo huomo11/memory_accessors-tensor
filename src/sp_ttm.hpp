@@ -5,6 +5,7 @@
 #include "sparse_tensor.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <stdint.h>
 #include <stddef.h>
 #include <thread>
@@ -24,10 +25,13 @@ struct PreparedTTM {
     int mode;
     uint32_t output_rows;
     uint32_t factor_rows;
+    uint32_t tile_rows;
     std::vector<PreparedEntry> entries;
     std::vector<size_t> row_starts;
+    std::vector<PreparedEntry> factor_entries;
+    std::vector<size_t> tile_starts;
 
-    PreparedTTM() : mode(0), output_rows(0), factor_rows(0) {}
+    PreparedTTM() : mode(0), output_rows(0), factor_rows(0), tile_rows(64) {}
 };
 
 inline uint32_t ttm_output_rows(const SparseTensorCOO& x, int mode) {
@@ -71,11 +75,19 @@ inline bool prepared_entry_less(const PreparedEntry& a, const PreparedEntry& b) 
     return a.factor_row < b.factor_row;
 }
 
-inline PreparedTTM prepare_ttm(const SparseTensorCOO& x, int mode) {
+inline bool prepared_entry_factor_less(const PreparedEntry& a, const PreparedEntry& b) {
+    if (a.factor_row != b.factor_row) {
+        return a.factor_row < b.factor_row;
+    }
+    return a.output_row < b.output_row;
+}
+
+inline PreparedTTM prepare_ttm(const SparseTensorCOO& x, int mode, uint32_t tile_rows) {
     PreparedTTM p;
     p.mode = mode;
     p.output_rows = ttm_output_rows(x, mode);
     p.factor_rows = ttm_factor_rows(x, mode);
+    p.tile_rows = tile_rows == 0 ? 64 : tile_rows;
     p.entries.reserve(x.entries.size());
 
     size_t n;
@@ -94,6 +106,20 @@ inline PreparedTTM prepare_ttm(const SparseTensorCOO& x, int mode) {
     }
     for (n = 1; n < p.row_starts.size(); ++n) {
         p.row_starts[n] += p.row_starts[n - 1];
+    }
+
+    p.factor_entries = p.entries;
+    std::sort(p.factor_entries.begin(), p.factor_entries.end(), prepared_entry_factor_less);
+    {
+        uint32_t tile_count = (p.factor_rows + p.tile_rows - 1) / p.tile_rows;
+        p.tile_starts.assign((size_t)tile_count + 1, 0);
+        for (n = 0; n < p.factor_entries.size(); ++n) {
+            uint32_t tile = p.factor_entries[n].factor_row / p.tile_rows;
+            p.tile_starts[(size_t)tile + 1] += 1;
+        }
+        for (n = 1; n < p.tile_starts.size(); ++n) {
+            p.tile_starts[n] += p.tile_starts[n - 1];
+        }
     }
     return p;
 }
@@ -155,6 +181,66 @@ void compute_ttm_threaded(const PreparedTTM& p,
 
     for (t = 0; t < threads.size(); ++t) {
         threads[t].join();
+    }
+}
+
+inline void compute_ttm_blocked_fp32_fp64(const PreparedTTM& p,
+                                          const std::vector<double>& values,
+                                          const DenseMatrix<float>& factor,
+                                          size_t rank,
+                                          std::vector<double>* output,
+                                          double* upcast_ms,
+                                          double* compute_ms) {
+    output->assign((size_t)p.output_rows * rank, 0.0);
+    *upcast_ms = 0.0;
+    *compute_ms = 0.0;
+
+    uint32_t tile_count = p.tile_starts.empty()
+        ? 0 : (uint32_t)(p.tile_starts.size() - 1);
+    std::vector<double> workspace((size_t)p.tile_rows * rank, 0.0);
+    uint32_t tile;
+    for (tile = 0; tile < tile_count; ++tile) {
+        uint32_t tile_start = tile * p.tile_rows;
+        uint32_t tile_end = tile_start + p.tile_rows;
+        if (tile_end > p.factor_rows) {
+            tile_end = p.factor_rows;
+        }
+        uint32_t rows_in_tile = tile_end - tile_start;
+
+        std::chrono::high_resolution_clock::time_point u0 =
+            std::chrono::high_resolution_clock::now();
+        uint32_t tr;
+        for (tr = 0; tr < rows_in_tile; ++tr) {
+            size_t r;
+            for (r = 0; r < rank; ++r) {
+                workspace[(size_t)tr * rank + r] =
+                    (double)factor((size_t)tile_start + tr, r);
+            }
+        }
+        std::chrono::high_resolution_clock::time_point u1 =
+            std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> udiff = u1 - u0;
+        *upcast_ms += udiff.count();
+
+        std::chrono::high_resolution_clock::time_point c0 =
+            std::chrono::high_resolution_clock::now();
+        size_t begin = p.tile_starts[tile];
+        size_t end = p.tile_starts[(size_t)tile + 1];
+        size_t pos;
+        for (pos = begin; pos < end; ++pos) {
+            const PreparedEntry& e = p.factor_entries[pos];
+            double v = values[e.source_index];
+            uint32_t local_row = e.factor_row - tile_start;
+            size_t r;
+            for (r = 0; r < rank; ++r) {
+                (*output)[(size_t)e.output_row * rank + r] +=
+                    v * workspace[(size_t)local_row * rank + r];
+            }
+        }
+        std::chrono::high_resolution_clock::time_point c1 =
+            std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> cdiff = c1 - c0;
+        *compute_ms += cdiff.count();
     }
 }
 

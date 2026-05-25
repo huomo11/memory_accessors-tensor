@@ -37,6 +37,20 @@ Fix problem size and vary thread count:
 
 Compute is partitioned by output row, so each thread writes disjoint output rows and no atomics are required.
 
+## tile sweep
+
+Stage 2 blocked factor accessor experiment:
+
+- dims: `512,512,512`
+- nnz: `1000000`
+- ranks: `64,128`
+- mode: `0`
+- tile rows: `8,16,32,64,128,256`
+- threads: `1`
+- repeats: `5`
+
+The initial blocked variant is serial to avoid races when different factor-row tiles update the same output row.
+
 ## shape sweep
 
 After pilot validation, test multiple tensor shapes and modes to capture output-row distribution effects:

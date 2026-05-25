@@ -23,6 +23,7 @@ public:
              << "value_logical_read_bytes,"
              << "factor_logical_read_bytes,"
              << "factor_compute_logical_read_bytes,"
+             << "tile_workspace_bytes,"
              << "output_logical_write_bytes,"
              << "rel_error,"
              << "rank,"
@@ -34,6 +35,7 @@ public:
              << "dim0,"
              << "dim1,"
              << "dim2,"
+             << "tile_rows,"
              << "repeat\n";
     }
 
@@ -54,6 +56,7 @@ public:
              << r.value_logical_read_bytes << ","
              << r.factor_logical_read_bytes << ","
              << r.factor_compute_logical_read_bytes << ","
+             << r.tile_workspace_bytes << ","
              << r.output_logical_write_bytes << ","
              << r.rel_error << ","
              << r.rank << ","
@@ -65,6 +68,7 @@ public:
              << r.dim0 << ","
              << r.dim1 << ","
              << r.dim2 << ","
+             << r.tile_rows << ","
              << r.repeat << "\n";
     }
 

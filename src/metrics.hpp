@@ -20,6 +20,7 @@ struct MetricsRow {
     uint64_t value_logical_read_bytes;
     uint64_t factor_logical_read_bytes;
     uint64_t factor_compute_logical_read_bytes;
+    uint64_t tile_workspace_bytes;
     uint64_t output_logical_write_bytes;
     double rel_error;
     int rank;
@@ -31,6 +32,7 @@ struct MetricsRow {
     uint32_t dim0;
     uint32_t dim1;
     uint32_t dim2;
+    uint32_t tile_rows;
     int repeat;
 
     MetricsRow()
@@ -39,9 +41,10 @@ struct MetricsRow {
           factor_storage_bytes(0), output_storage_bytes(0),
           index_logical_read_bytes(0), value_logical_read_bytes(0),
           factor_logical_read_bytes(0), factor_compute_logical_read_bytes(0),
-          output_logical_write_bytes(0),
+          tile_workspace_bytes(0), output_logical_write_bytes(0),
           rel_error(0.0), rank(0), nnz(0), mode(0), thread_count(1),
-          seed(0), variant(""), dim0(0), dim1(0), dim2(0), repeat(0) {}
+          seed(0), variant(""), dim0(0), dim1(0), dim2(0), tile_rows(64),
+          repeat(0) {}
 };
 
 inline double relative_frobenius_error(const std::vector<double>& y,
