@@ -32,6 +32,30 @@ cmake --build build -j
 
 The CMake file is written for C++11 and GCC 4.8.5 style compatibility. Non-MSVC builds explicitly pass `-std=c++11` and link `Threads::Threads`.
 
+## Controlled Baseline vs External Library Baseline
+
+`factor_fp64_compute_fp64` is an output-stationary / CSR-style controlled fp64 baseline for precision and layout ablations. It is not yet a mature sparse library baseline. See [docs/baseline_and_kernel_definition.md](docs/baseline_and_kernel_definition.md) for the kernel definition, third-layer on-the-fly factor variant, and planned external baselines.
+
+## CSR Backend Prototype
+
+Stage 3 adds a CSR SpMM backend prototype. Sparse-dense TTM is unfolded as `Y = A F`, where `A` is a CSR matrix and `F` is the dense factor/sketch matrix. With `USE_MKL=OFF`, the project uses a custom CSR SpMM backend to validate the accessor/backend interface. `USE_MKL=ON` is optional and does not make MKL a hard dependency. See [docs/backend_plan.md](docs/backend_plan.md).
+
+Example CSR smoke:
+
+```bash
+./build/ttm_bench \
+  --output results/stage3_smoke.csv \
+  --dims 16,12,10 \
+  --nnz 1000 \
+  --ranks 4 \
+  --modes 0 \
+  --threads 1 \
+  --repeats 1 \
+  --seed 42 \
+  --tile-rows 8 \
+  --variants factor_fp64_compute_fp64,csr_fp64_factor_fp64_backend,csr_factor_fp32_global_upcast_fp64_backend,csr_factor_fp32_tiled_accessor_fp64_backend
+```
+
 ## Smoke Test
 
 ```bash
@@ -128,7 +152,7 @@ Generated SVGs:
 
 Fixed schema:
 
-`total_ms, format_prepare_ms, upcast_prepare_ms, compute_ms, kernel_ms, index_storage_bytes, value_storage_bytes, factor_storage_bytes, output_storage_bytes, index_logical_read_bytes, value_logical_read_bytes, factor_logical_read_bytes, factor_compute_logical_read_bytes, tile_workspace_bytes, output_logical_write_bytes, rel_error, rank, nnz, mode, thread_count, seed, variant, dim0, dim1, dim2, tile_rows, repeat, layout, output_block_rows`
+`total_ms, format_prepare_ms, upcast_prepare_ms, compute_ms, kernel_ms, index_storage_bytes, value_storage_bytes, factor_storage_bytes, output_storage_bytes, index_logical_read_bytes, value_logical_read_bytes, factor_logical_read_bytes, factor_compute_logical_read_bytes, tile_workspace_bytes, output_logical_write_bytes, rel_error, rank, nnz, mode, thread_count, seed, variant, dim0, dim1, dim2, tile_rows, repeat, layout, output_block_rows, backend, csr_nrows, csr_ncols, csr_nnz, num_factor_tiles`
 
 `format_prepare_ms` measures mode-wise COO sorting and row-start construction. `upcast_prepare_ms` measures fp32 storage to fp64 workspace conversion. `compute_ms` measures the core sparse-dense TTM loop. `kernel_ms = upcast_prepare_ms + compute_ms`. `total_ms` remains `format_prepare_ms + upcast_prepare_ms + compute_ms`.
 

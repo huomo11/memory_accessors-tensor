@@ -89,6 +89,9 @@ def main():
                      "factor_fp32_onfly_compute_fp64",
                      "factor_fp32_blocked_compute_fp64",
                      "factor_fp32_2dblocked_compute_fp64",
+                     "csr_fp64_factor_fp64_backend",
+                     "csr_factor_fp32_global_upcast_fp64_backend",
+                     "csr_factor_fp32_tiled_accessor_fp64_backend",
                      "value_fp32_factor_fp64_compute_fp64"):
             if name in by_variant:
                 speedup_line(name, by_variant[base_name], by_variant[name])

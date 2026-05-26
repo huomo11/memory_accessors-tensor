@@ -38,7 +38,12 @@ public:
              << "tile_rows,"
              << "repeat,"
              << "layout,"
-             << "output_block_rows\n";
+             << "output_block_rows,"
+             << "backend,"
+             << "csr_nrows,"
+             << "csr_ncols,"
+             << "csr_nnz,"
+             << "num_factor_tiles\n";
     }
 
     bool good() const { return out_.good(); }
@@ -73,7 +78,12 @@ public:
              << r.tile_rows << ","
              << r.repeat << ","
              << r.layout << ","
-             << r.output_block_rows << "\n";
+             << r.output_block_rows << ","
+             << r.backend << ","
+             << r.csr_nrows << ","
+             << r.csr_ncols << ","
+             << r.csr_nnz << ","
+             << r.num_factor_tiles << "\n";
     }
 
 private:

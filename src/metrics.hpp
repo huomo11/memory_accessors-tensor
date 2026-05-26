@@ -35,6 +35,11 @@ struct MetricsRow {
     uint32_t tile_rows;
     const char* layout;
     uint32_t output_block_rows;
+    const char* backend;
+    uint32_t csr_nrows;
+    uint32_t csr_ncols;
+    uint64_t csr_nnz;
+    uint32_t num_factor_tiles;
     int repeat;
 
     MetricsRow()
@@ -46,7 +51,9 @@ struct MetricsRow {
           tile_workspace_bytes(0), output_logical_write_bytes(0),
           rel_error(0.0), rank(0), nnz(0), mode(0), thread_count(1),
           seed(0), variant(""), dim0(0), dim1(0), dim2(0), tile_rows(64),
-          layout("output_row"), output_block_rows(64), repeat(0) {}
+          layout("output_row"), output_block_rows(64), backend("custom"),
+          csr_nrows(0), csr_ncols(0), csr_nnz(0), num_factor_tiles(0),
+          repeat(0) {}
 };
 
 inline double relative_frobenius_error(const std::vector<double>& y,
