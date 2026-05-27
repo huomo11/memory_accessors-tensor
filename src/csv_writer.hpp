@@ -23,7 +23,6 @@ public:
              << "value_logical_read_bytes,"
              << "factor_logical_read_bytes,"
              << "factor_compute_logical_read_bytes,"
-             << "tile_workspace_bytes,"
              << "output_logical_write_bytes,"
              << "rel_error,"
              << "rank,"
@@ -35,15 +34,11 @@ public:
              << "dim0,"
              << "dim1,"
              << "dim2,"
-             << "tile_rows,"
              << "repeat,"
-             << "layout,"
-             << "output_block_rows,"
              << "backend,"
              << "csr_nrows,"
              << "csr_ncols,"
-             << "csr_nnz,"
-             << "num_factor_tiles\n";
+             << "csr_nnz\n";
     }
 
     bool good() const { return out_.good(); }
@@ -63,7 +58,6 @@ public:
              << r.value_logical_read_bytes << ","
              << r.factor_logical_read_bytes << ","
              << r.factor_compute_logical_read_bytes << ","
-             << r.tile_workspace_bytes << ","
              << r.output_logical_write_bytes << ","
              << r.rel_error << ","
              << r.rank << ","
@@ -75,15 +69,11 @@ public:
              << r.dim0 << ","
              << r.dim1 << ","
              << r.dim2 << ","
-             << r.tile_rows << ","
              << r.repeat << ","
-             << r.layout << ","
-             << r.output_block_rows << ","
              << r.backend << ","
              << r.csr_nrows << ","
              << r.csr_ncols << ","
-             << r.csr_nnz << ","
-             << r.num_factor_tiles << "\n";
+             << r.csr_nnz << "\n";
     }
 
 private:

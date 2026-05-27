@@ -1,11 +1,22 @@
 #ifndef CSR_MATRIX_HPP
 #define CSR_MATRIX_HPP
 
-#include "sp_ttm.hpp"
+#include "sparse_tensor.hpp"
 
+#include <algorithm>
 #include <stdint.h>
 #include <stddef.h>
 #include <vector>
+
+struct CsrBuildEntry {
+    uint32_t row;
+    uint32_t col;
+    uint32_t source_index;
+
+    CsrBuildEntry() : row(0), col(0), source_index(0) {}
+    CsrBuildEntry(uint32_t r, uint32_t c, uint32_t s)
+        : row(r), col(c), source_index(s) {}
+};
 
 struct CsrMatrix {
     uint32_t nrows;
@@ -37,90 +48,103 @@ struct CsrMatrixF {
     size_t nnz() const { return values.size(); }
 };
 
-inline CsrMatrix build_csr_from_prepared(const PreparedTTM& prep,
-                                         const std::vector<double>& source_values) {
-    CsrMatrix csr(prep.output_rows, prep.factor_rows);
-    csr.row_ptr = prep.row_starts;
-    csr.col_idx.assign(prep.entries.size(), 0);
-    csr.values.assign(prep.entries.size(), 0.0);
+inline uint32_t csr_unfold_rows(const SparseTensorCOO& x, int mode) {
+    if (mode == 0) {
+        return x.dim1 * x.dim2;
+    }
+    if (mode == 1) {
+        return x.dim0 * x.dim2;
+    }
+    return x.dim0 * x.dim1;
+}
 
-    size_t p;
-    for (p = 0; p < prep.entries.size(); ++p) {
-        const PreparedEntry& e = prep.entries[p];
-        csr.col_idx[p] = e.factor_row;
-        csr.values[p] = source_values[e.source_index];
+inline uint32_t csr_unfold_cols(const SparseTensorCOO& x, int mode) {
+    if (mode == 0) {
+        return x.dim0;
+    }
+    if (mode == 1) {
+        return x.dim1;
+    }
+    return x.dim2;
+}
+
+inline void tensor_entry_to_csr(const SparseEntry& e, const SparseTensorCOO& x,
+                                int mode, uint32_t* row, uint32_t* col) {
+    if (mode == 0) {
+        *row = e.j * x.dim2 + e.k;
+        *col = e.i;
+    } else if (mode == 1) {
+        *row = e.i * x.dim2 + e.k;
+        *col = e.j;
+    } else {
+        *row = e.i * x.dim1 + e.j;
+        *col = e.k;
+    }
+}
+
+inline bool csr_build_entry_less(const CsrBuildEntry& a, const CsrBuildEntry& b) {
+    if (a.row != b.row) {
+        return a.row < b.row;
+    }
+    return a.col < b.col;
+}
+
+inline void build_csr_entries(const SparseTensorCOO& x, int mode,
+                              std::vector<CsrBuildEntry>* entries) {
+    entries->clear();
+    entries->reserve(x.entries.size());
+    size_t n;
+    for (n = 0; n < x.entries.size(); ++n) {
+        uint32_t row = 0;
+        uint32_t col = 0;
+        tensor_entry_to_csr(x.entries[n], x, mode, &row, &col);
+        entries->push_back(CsrBuildEntry(row, col, (uint32_t)n));
+    }
+    std::sort(entries->begin(), entries->end(), csr_build_entry_less);
+}
+
+inline CsrMatrix build_csr_fp64_from_tensor(const SparseTensorCOO& x, int mode) {
+    CsrMatrix csr(csr_unfold_rows(x, mode), csr_unfold_cols(x, mode));
+    std::vector<CsrBuildEntry> entries;
+    build_csr_entries(x, mode, &entries);
+
+    size_t n;
+    for (n = 0; n < entries.size(); ++n) {
+        csr.row_ptr[(size_t)entries[n].row + 1] += 1;
+    }
+    for (n = 1; n < csr.row_ptr.size(); ++n) {
+        csr.row_ptr[n] += csr.row_ptr[n - 1];
+    }
+
+    csr.col_idx.assign(entries.size(), 0);
+    csr.values.assign(entries.size(), 0.0);
+    for (n = 0; n < entries.size(); ++n) {
+        csr.col_idx[n] = entries[n].col;
+        csr.values[n] = x.entries[entries[n].source_index].value;
     }
     return csr;
 }
 
-inline CsrMatrixF build_csr_float_from_prepared(const PreparedTTM& prep,
-                                                const std::vector<double>& source_values) {
-    CsrMatrixF csr(prep.output_rows, prep.factor_rows);
-    csr.row_ptr = prep.row_starts;
-    csr.col_idx.assign(prep.entries.size(), 0);
-    csr.values.assign(prep.entries.size(), 0.0f);
+inline CsrMatrixF build_csr_fp32_from_tensor(const SparseTensorCOO& x, int mode) {
+    CsrMatrixF csr(csr_unfold_rows(x, mode), csr_unfold_cols(x, mode));
+    std::vector<CsrBuildEntry> entries;
+    build_csr_entries(x, mode, &entries);
 
-    size_t p;
-    for (p = 0; p < prep.entries.size(); ++p) {
-        const PreparedEntry& e = prep.entries[p];
-        csr.col_idx[p] = e.factor_row;
-        csr.values[p] = (float)source_values[e.source_index];
+    size_t n;
+    for (n = 0; n < entries.size(); ++n) {
+        csr.row_ptr[(size_t)entries[n].row + 1] += 1;
+    }
+    for (n = 1; n < csr.row_ptr.size(); ++n) {
+        csr.row_ptr[n] += csr.row_ptr[n - 1];
+    }
+
+    csr.col_idx.assign(entries.size(), 0);
+    csr.values.assign(entries.size(), 0.0f);
+    for (n = 0; n < entries.size(); ++n) {
+        csr.col_idx[n] = entries[n].col;
+        csr.values[n] = (float)x.entries[entries[n].source_index].value;
     }
     return csr;
-}
-
-inline CsrMatrix build_csr_column_tile(const CsrMatrix& csr,
-                                       uint32_t col_begin,
-                                       uint32_t col_end) {
-    CsrMatrix tile(csr.nrows, col_end - col_begin);
-    size_t row;
-    for (row = 0; row < (size_t)csr.nrows; ++row) {
-        size_t p;
-        for (p = csr.row_ptr[row]; p < csr.row_ptr[row + 1]; ++p) {
-            uint32_t col = csr.col_idx[p];
-            if (col >= col_begin && col < col_end) {
-                tile.row_ptr[row + 1] += 1;
-            }
-        }
-    }
-    for (row = 1; row < tile.row_ptr.size(); ++row) {
-        tile.row_ptr[row] += tile.row_ptr[row - 1];
-    }
-
-    tile.col_idx.assign(tile.row_ptr[(size_t)csr.nrows], 0);
-    tile.values.assign(tile.row_ptr[(size_t)csr.nrows], 0.0);
-    std::vector<size_t> cursor = tile.row_ptr;
-    for (row = 0; row < (size_t)csr.nrows; ++row) {
-        size_t p;
-        for (p = csr.row_ptr[row]; p < csr.row_ptr[row + 1]; ++p) {
-            uint32_t col = csr.col_idx[p];
-            if (col >= col_begin && col < col_end) {
-                size_t out_pos = cursor[row];
-                tile.col_idx[out_pos] = col - col_begin;
-                tile.values[out_pos] = csr.values[p];
-                cursor[row] += 1;
-            }
-        }
-    }
-    return tile;
-}
-
-inline void build_csr_factor_tiles(const CsrMatrix& csr,
-                                   uint32_t tile_rows,
-                                   std::vector<CsrMatrix>* tiles) {
-    uint32_t rows = tile_rows == 0 ? 64 : tile_rows;
-    uint32_t tile_count = (csr.ncols + rows - 1) / rows;
-    tiles->clear();
-    tiles->reserve(tile_count);
-    uint32_t tile;
-    for (tile = 0; tile < tile_count; ++tile) {
-        uint32_t col_begin = tile * rows;
-        uint32_t col_end = col_begin + rows;
-        if (col_end > csr.ncols) {
-            col_end = csr.ncols;
-        }
-        tiles->push_back(build_csr_column_tile(csr, col_begin, col_end));
-    }
 }
 
 #endif

@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=mkl_three_variants
+#SBATCH --partition=c003t
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --time=01:00:00
-#SBATCH --output=logs/mkl_three_variants_%j.out
-#SBATCH --error=logs/mkl_three_variants_%j.err
-
-# Add site-specific #SBATCH --partition or --account lines if needed.
+#SBATCH --mem=16G
+#SBATCH --time=02:00:00
+#SBATCH --comment=alama
+#SBATCH --output=logs/%j.out
+#SBATCH --error=logs/%j.err
 
 set -euo pipefail
 cd "${SLURM_SUBMIT_DIR}"

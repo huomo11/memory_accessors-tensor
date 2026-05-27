@@ -1,113 +1,81 @@
-# Backend Plan
+# MKL Backend Plan
 
-Stage 3 separates memory-accessor policy from sparse compute.
-
-The earlier controlled prototype directly owns sparse traversal, factor conversion, and accumulation. That is useful for mechanism ablations, but it is not the final software architecture. The Stage 3 direction is:
-
-```text
-low-precision storage
-    -> accessor converts/copies to fp64 workspace
-    -> sparse/dense compute backend performs SpMM
-```
-
-## CSR SpMM Interpretation
-
-Mode-wise sparse-dense TTM can be written as:
+The current benchmark is MKL-focused and treats sparse-dense TTM as matrix SpMM:
 
 ```text
 Y = A F
 ```
 
-where `A` is the sparse matrix formed by mode unfolding:
+`A` is a CSR matrix from sparse tensor mode unfolding. `F` is a dense factor/sketch matrix. `Y` is dense output.
+
+## CSR Unfolding
+
+For a 3D tensor with shape `I x J x K`:
 
 - mode 0: `rows = J * K`, `cols = I`
 - mode 1: `rows = I * K`, `cols = J`
 - mode 2: `rows = I * J`, `cols = K`
 
-Each tensor nonzero maps to:
+Each nonzero `x(i,j,k)` maps to:
 
 ```text
 csr_row = output_row
 csr_col = factor_row
-csr_value = tensor_value
+csr_value = x
 ```
 
-The new CSR path builds this matrix explicitly and calls a backend SpMM routine.
+## Public Variants
 
-## Controlled Baseline vs Mature Backend Baseline
+`mkl_fp64`
 
-The existing `factor_fp64_compute_fp64` variant is an output-stationary / CSR-style controlled baseline implemented inside this repository. It is good for precision and layout ablations.
+- `A`: fp64 CSR
+- `F`: fp64 dense
+- `Y`: fp64 dense
+- backend: `mkl_sparse_d_create_csr`, `mkl_sparse_d_mm`, `mkl_sparse_destroy`
 
-The backend path is different: sparse traversal and accumulation are delegated to a backend interface. With `USE_MKL=OFF`, the backend is a simple in-repository custom CSR SpMM used to validate the interface and data movement. With `USE_MKL=ON`, the build system looks for MKL headers and `libmkl_rt`; if both are found, the CSR backend calls oneMKL sparse BLAS. If MKL is unavailable, configuration warns and falls back to the custom backend.
+`mkl_fp32`
 
-This means Stage 3 currently validates the architecture. It does not yet claim mature-library performance.
+- `A`: fp32 CSR
+- `F`: fp32 dense
+- `Y`: fp32 dense
+- backend: `mkl_sparse_s_create_csr`, `mkl_sparse_s_mm`, `mkl_sparse_destroy`
+- `rel_error` is measured against `mkl_fp64`
 
-## Stage 3 Variants
+`mkl_mixed_factor_fp32_storage_fp64_compute`
 
-`csr_fp64_factor_fp64_backend`
+- `A`: fp64 CSR
+- `F`: fp32 storage
+- accessor converts `F` to a fp64 workspace
+- `Y`: fp64 dense
+- backend: `mkl_sparse_d_create_csr`, `mkl_sparse_d_mm`, `mkl_sparse_destroy`
 
-- CSR `A` stores fp64 values;
-- factor `F` is fp64;
-- output `Y` is fp64;
-- backend computes `Y = A F`.
+The mixed variant is the low-storage high-compute candidate.
 
-Formal experiment alias: `mkl_fp64`.
+## Build Policy
 
-`csr_fp32_factor_fp32_backend`
-
-- CSR `A` stores fp32 values;
-- factor `F` is fp32;
-- output `Y` is fp32;
-- backend computes `Y = A F`.
-
-Formal experiment alias: `mkl_fp32`.
-
-`csr_factor_fp32_global_upcast_fp64_backend`
-
-- factor `F` is stored in fp32;
-- accessor converts the whole factor matrix to a fp64 workspace;
-- backend computes with fp64 CSR values and fp64 factor workspace.
-
-Formal experiment alias: `mkl_mixed_factor_fp32_storage_fp64_compute`.
-
-`csr_factor_fp32_tiled_accessor_fp64_backend`
-
-- factor `F` is stored in fp32;
-- CSR is split into column/factor-row tiles;
-- for each factor tile, accessor converts the matching fp32 factor tile to a fp64 workspace;
-- backend accumulates `Y += A_tile * F_tile_workspace`.
-
-This is the first matrix-level version of the memory accessor idea: the accessor owns storage-to-workspace movement, while SpMM owns sparse traversal and accumulation.
-
-## MKL / Sparse BLAS Backend
-
-The CMake option is:
+Use:
 
 ```bash
 export MKLROOT=/opt/intel/oneapi/mkl/latest
 export LD_LIBRARY_PATH=$MKLROOT/lib/intel64:$LD_LIBRARY_PATH
+export MKL_THREADING_LAYER=SEQUENTIAL
+export MKL_NUM_THREADS=1
+export OMP_NUM_THREADS=1
 
 cmake -S . -B build-mkl \
   -DCMAKE_BUILD_TYPE=Release \
   -DUSE_MKL=ON \
   -DMKL_ROOT=$MKLROOT
+
+cmake --build build-mkl -j 1
 ```
 
 When MKL is found, CMake prints `MKL backend enabled`, defines `USE_MKL_BACKEND`, includes `mkl.h`, links `libmkl_rt`, and links `pthread`, `dl`, and `m` on Unix-like systems.
 
-The MKL path maps:
+If MKL is not found, the code falls back to a custom CSR backend for buildability. Those fallback results are useful for smoke tests only. Formal results should report `backend=mkl`.
 
-- `mkl_fp64` to MKL sparse double CSR SpMM;
-- `mkl_fp32` to MKL sparse single CSR SpMM;
-- `mkl_mixed_factor_fp32_storage_fp64_compute` to factor fp32 storage plus whole-factor fp64 workspace plus MKL sparse double CSR SpMM;
-- `csr_factor_fp32_tiled_accessor_fp64_backend` to one MKL SpMM call per CSR column tile.
+## Archived Exploration
 
-The fp64 MKL call uses zero-based CSR, `mkl_sparse_d_create_csr`, `mkl_sparse_d_mm`, and `mkl_sparse_destroy`. The fp32 MKL call uses `mkl_sparse_s_create_csr`, `mkl_sparse_s_mm`, and `mkl_sparse_destroy`. Dense factor and output matrices are row-major.
+Earlier versions explored hand-written output-stationary sparse loops, fp32 on-the-fly factor access, blocked factor tiles, and layout-aware sparse entry orderings. Those experiments established that factor-side storage is the relevant target, but they are no longer the public benchmark interface.
 
-After matrix-level CSR SpMM is validated, tensor-specific external baselines should be added separately:
-
-- SPLATT;
-- HiCOO;
-- HiParTI.
-
-Those are future sparse tensor kernel baselines, not part of the current Stage 3 implementation.
+The current paper-facing path is the MKL three-line comparison above.

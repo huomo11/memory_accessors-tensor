@@ -4,17 +4,14 @@
 #include "metrics.hpp"
 #include "precision_policy.hpp"
 #include "sparse_tensor.hpp"
-#include "sp_ttm.hpp"
 #include "spmm_backend.hpp"
 #include "timer.hpp"
 
 #include <errno.h>
 #include <stdint.h>
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
 #include <random>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -26,18 +23,14 @@ struct Options {
     std::vector<uint64_t> nnzs;
     std::vector<int> ranks;
     std::vector<int> modes;
-    std::vector<int> thread_counts;
-    int active_threads;
+    int threads;
     int repeats;
     uint64_t seed;
-    uint32_t tile_rows;
-    uint32_t output_block_rows;
     std::vector<VariantKind> selected_variants;
 
     Options()
-        : output("results/smoke.csv"), dim0(16), dim1(12), dim2(10),
-          active_threads(1), repeats(1), seed(42), tile_rows(64),
-          output_block_rows(64) {}
+        : output("results/mkl_three_variants.csv"), dim0(16), dim1(12), dim2(10),
+          threads(1), repeats(1), seed(42) {}
 };
 
 static bool parse_long_checked(const char* text, long* value) {
@@ -107,57 +100,16 @@ static bool parse_ull_list(const std::string& text, std::vector<uint64_t>* out) 
 }
 
 static bool variant_from_name(const std::string& name, VariantKind* variant) {
-    if (name == "factor_fp64_compute_fp64") {
-        *variant = VAR_FACTOR_FP64_COMPUTE_FP64;
-    } else if (name == "factor_fp32_compute_fp64") {
-        *variant = VAR_FACTOR_FP32_COMPUTE_FP64;
-    } else if (name == "factor_fp32_onfly_compute_fp64") {
-        *variant = VAR_FACTOR_FP32_ONFLY_COMPUTE_FP64;
-    } else if (name == "factor_fp32_blocked_compute_fp64") {
-        *variant = VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64;
-    } else if (name == "factor_fp32_2dblocked_compute_fp64") {
-        *variant = VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64;
-    } else if (name == "factor_fp32_compute_fp32") {
-        *variant = VAR_FACTOR_FP32_COMPUTE_FP32;
-    } else if (name == "value_fp32_factor_fp64_compute_fp64") {
-        *variant = VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64;
-    } else if (name == "csr_fp64_factor_fp64_backend" ||
-               name == "csr_fp64_factor_fp64_mkl") {
-        *variant = VAR_CSR_FP64_FACTOR_FP64_BACKEND;
-    } else if (name == "csr_factor_fp32_global_upcast_fp64_backend" ||
-               name == "csr_factor_fp32_global_upcast_fp64_mkl") {
-        *variant = VAR_CSR_FACTOR_FP32_GLOBAL_UPCAST_FP64_BACKEND;
-    } else if (name == "csr_factor_fp32_tiled_accessor_fp64_backend") {
-        *variant = VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND;
-    } else if (name == "csr_fp32_factor_fp32_backend" ||
-               name == "mkl_fp32") {
-        *variant = VAR_CSR_FP32_FACTOR_FP32_BACKEND;
-    } else if (name == "mkl_fp64") {
-        *variant = VAR_CSR_FP64_FACTOR_FP64_BACKEND;
-    } else if (name == "mkl_mixed_factor_fp32_storage_fp64_compute" ||
-               name == "mkl_mixed") {
-        *variant = VAR_CSR_FACTOR_FP32_GLOBAL_UPCAST_FP64_BACKEND;
+    if (name == "mkl_fp64") {
+        *variant = VAR_MKL_FP64;
+    } else if (name == "mkl_fp32") {
+        *variant = VAR_MKL_FP32;
+    } else if (name == "mkl_mixed_factor_fp32_storage_fp64_compute") {
+        *variant = VAR_MKL_MIXED_FACTOR_FP32_STORAGE_FP64_COMPUTE;
     } else {
         return false;
     }
     return true;
-}
-
-static bool is_csr_variant(VariantKind variant) {
-    return variant == VAR_CSR_FP64_FACTOR_FP64_BACKEND ||
-        variant == VAR_CSR_FACTOR_FP32_GLOBAL_UPCAST_FP64_BACKEND ||
-        variant == VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND ||
-        variant == VAR_CSR_FP32_FACTOR_FP32_BACKEND;
-}
-
-static bool selected_has_csr_variant(const std::vector<VariantKind>& variants) {
-    size_t i;
-    for (i = 0; i < variants.size(); ++i) {
-        if (is_csr_variant(variants[i])) {
-            return true;
-        }
-    }
-    return false;
 }
 
 static bool parse_variant_list(const std::string& text, std::vector<VariantKind>* out) {
@@ -165,7 +117,7 @@ static bool parse_variant_list(const std::string& text, std::vector<VariantKind>
     out->clear();
     size_t i;
     for (i = 0; i < parts.size(); ++i) {
-        VariantKind variant = VAR_FACTOR_FP64_COMPUTE_FP64;
+        VariantKind variant = VAR_MKL_FP64;
         if (!variant_from_name(parts[i], &variant)) {
             return false;
         }
@@ -204,9 +156,8 @@ static bool parse_dims(const std::string& text, uint32_t* d0, uint32_t* d1, uint
 
 static void usage() {
     std::cerr << "Usage: ttm_bench --output out.csv --dims I,J,K --nnz N "
-              << "--ranks r1,r2 --modes 0,1,2 --threads T --repeats R "
-              << "--seed S --tile-rows T --output-block-rows B "
-              << "--variants v1,v2\n";
+              << "--ranks r1,r2 --modes 0,1,2 --threads 1 --repeats R "
+              << "--seed S --variants mkl_fp64,mkl_fp32,mkl_mixed_factor_fp32_storage_fp64_compute\n";
 }
 
 static bool parse_args(int argc, char** argv, Options* opt) {
@@ -236,15 +187,11 @@ static bool parse_args(int argc, char** argv, Options* opt) {
                 return false;
             }
         } else if (key == "--threads") {
-            if (!parse_int_list(val, &opt->thread_counts)) {
+            long tmp = 0;
+            if (!parse_long_checked(val.c_str(), &tmp) || tmp < 1) {
                 return false;
             }
-            size_t ti;
-            for (ti = 0; ti < opt->thread_counts.size(); ++ti) {
-                if (opt->thread_counts[ti] < 1) {
-                    return false;
-                }
-            }
+            opt->threads = (int)tmp;
         } else if (key == "--repeats") {
             long tmp = 0;
             if (!parse_long_checked(val.c_str(), &tmp) || tmp < 1) {
@@ -255,18 +202,6 @@ static bool parse_args(int argc, char** argv, Options* opt) {
             if (!parse_ull_checked(val.c_str(), &opt->seed)) {
                 return false;
             }
-        } else if (key == "--tile-rows") {
-            long tmp = 0;
-            if (!parse_long_checked(val.c_str(), &tmp) || tmp < 1) {
-                return false;
-            }
-            opt->tile_rows = (uint32_t)tmp;
-        } else if (key == "--output-block-rows") {
-            long tmp = 0;
-            if (!parse_long_checked(val.c_str(), &tmp) || tmp < 1) {
-                return false;
-            }
-            opt->output_block_rows = (uint32_t)tmp;
         } else if (key == "--variants") {
             if (!parse_variant_list(val, &opt->selected_variants)) {
                 return false;
@@ -276,26 +211,19 @@ static bool parse_args(int argc, char** argv, Options* opt) {
         }
         i += 2;
     }
+    if (opt->nnzs.empty()) {
+        opt->nnzs.push_back(1000);
+    }
     if (opt->ranks.empty()) {
         opt->ranks.push_back(4);
     }
     if (opt->modes.empty()) {
         opt->modes.push_back(0);
     }
-    if (opt->nnzs.empty()) {
-        opt->nnzs.push_back(1000);
-    }
-    if (opt->thread_counts.empty()) {
-        opt->thread_counts.push_back(1);
-    }
     if (opt->selected_variants.empty()) {
-        opt->selected_variants.push_back(VAR_FACTOR_FP64_COMPUTE_FP64);
-        opt->selected_variants.push_back(VAR_FACTOR_FP32_COMPUTE_FP64);
-        opt->selected_variants.push_back(VAR_FACTOR_FP32_ONFLY_COMPUTE_FP64);
-        opt->selected_variants.push_back(VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64);
-        opt->selected_variants.push_back(VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64);
-        opt->selected_variants.push_back(VAR_FACTOR_FP32_COMPUTE_FP32);
-        opt->selected_variants.push_back(VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64);
+        opt->selected_variants.push_back(VAR_MKL_FP64);
+        opt->selected_variants.push_back(VAR_MKL_FP32);
+        opt->selected_variants.push_back(VAR_MKL_MIXED_FACTOR_FP32_STORAGE_FP64_COMPUTE);
     }
     return true;
 }
@@ -312,16 +240,6 @@ static DenseMatrix<double> generate_factor_double(size_t rows, size_t cols, uint
 }
 
 template <typename OutT, typename InT>
-static std::vector<OutT> convert_values(const std::vector<InT>& in) {
-    std::vector<OutT> out(in.size());
-    size_t i;
-    for (i = 0; i < in.size(); ++i) {
-        out[i] = (OutT)in[i];
-    }
-    return out;
-}
-
-template <typename OutT, typename InT>
 static DenseMatrix<OutT> convert_factor(const DenseMatrix<InT>& in) {
     DenseMatrix<OutT> out(in.rows(), in.cols());
     size_t i;
@@ -331,50 +249,28 @@ static DenseMatrix<OutT> convert_factor(const DenseMatrix<InT>& in) {
     return out;
 }
 
-static std::vector<double> tensor_values_double(const SparseTensorCOO& x) {
-    std::vector<double> vals(x.entries.size());
-    size_t i;
-    for (i = 0; i < x.entries.size(); ++i) {
-        vals[i] = x.entries[i].value;
-    }
-    return vals;
-}
-
-static MetricsRow make_metric_base(const Options& opt, const PreparedTTM& prep,
+static MetricsRow make_metric_base(const Options& opt, const CsrMatrix& csr,
                                    VariantKind variant, int rank, int mode,
-                                   int repeat, double format_ms,
-                                   const CsrMatrix* csr,
-                                   size_t num_factor_tiles,
-                                   SpMMBackend backend) {
+                                   int repeat, double format_ms, SpMMBackend backend) {
     MetricsRow row;
-    uint64_t nnz = (uint64_t)prep.entries.size();
-    uint64_t out_elems = (uint64_t)prep.output_rows * (uint64_t)rank;
-    uint64_t factor_elems = (uint64_t)prep.factor_rows * (uint64_t)rank;
+    uint64_t nnz = (uint64_t)csr.nnz();
+    uint64_t factor_elems = (uint64_t)csr.ncols * (uint64_t)rank;
+    uint64_t output_elems = (uint64_t)csr.nrows * (uint64_t)rank;
     size_t value_size = variant_value_storage_size(variant);
     size_t factor_size = variant_factor_storage_size(variant);
     size_t factor_compute_size = variant_factor_compute_read_size(variant);
     size_t output_size = variant_output_storage_size(variant);
 
     row.format_prepare_ms = format_ms;
-    row.index_storage_bytes = nnz * 3ULL * (uint64_t)sizeof(uint32_t);
+    row.index_storage_bytes = ((uint64_t)csr.nrows + 1ULL) * (uint64_t)sizeof(size_t) +
+        nnz * (uint64_t)sizeof(uint32_t);
     row.value_storage_bytes = nnz * (uint64_t)value_size;
     row.factor_storage_bytes = factor_elems * (uint64_t)factor_size;
-    row.output_storage_bytes = out_elems * (uint64_t)output_size;
-    row.index_logical_read_bytes = nnz * 3ULL * (uint64_t)sizeof(uint32_t);
+    row.output_storage_bytes = output_elems * (uint64_t)output_size;
+    row.index_logical_read_bytes = nnz * (uint64_t)sizeof(uint32_t);
     row.value_logical_read_bytes = nnz * (uint64_t)value_size;
     row.factor_logical_read_bytes = nnz * (uint64_t)rank * (uint64_t)factor_size;
-    row.factor_compute_logical_read_bytes =
-        nnz * (uint64_t)rank * (uint64_t)factor_compute_size;
-    row.tile_workspace_bytes = 0;
-    if (variant == VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64 ||
-        variant == VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64 ||
-        variant == VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND) {
-        uint64_t rows = (uint64_t)opt.tile_rows;
-        if (rows > (uint64_t)prep.factor_rows) {
-            rows = (uint64_t)prep.factor_rows;
-        }
-        row.tile_workspace_bytes = rows * (uint64_t)rank * (uint64_t)sizeof(double);
-    }
+    row.factor_compute_logical_read_bytes = nnz * (uint64_t)rank * (uint64_t)factor_compute_size;
     {
         uint64_t streamed = nnz * (uint64_t)rank * (uint64_t)output_size;
         row.output_logical_write_bytes = row.output_storage_bytes > streamed
@@ -383,187 +279,78 @@ static MetricsRow make_metric_base(const Options& opt, const PreparedTTM& prep,
     row.rank = rank;
     row.nnz = nnz;
     row.mode = mode;
-    row.thread_count = opt.active_threads;
+    row.thread_count = opt.threads;
     row.seed = opt.seed;
     row.variant = variant_name(variant);
     row.dim0 = opt.dim0;
     row.dim1 = opt.dim1;
     row.dim2 = opt.dim2;
-    row.tile_rows = opt.tile_rows;
-    row.layout = "output_row";
-    if (variant == VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64) {
-        row.layout = "factor_tile";
-    } else if (variant == VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64) {
-        row.layout = "output_factor_2d";
-    } else if (variant == VAR_CSR_FP64_FACTOR_FP64_BACKEND ||
-               variant == VAR_CSR_FACTOR_FP32_GLOBAL_UPCAST_FP64_BACKEND ||
-               variant == VAR_CSR_FP32_FACTOR_FP32_BACKEND) {
-        row.layout = "csr";
-    } else if (variant == VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND) {
-        row.layout = "csr_factor_tile";
-    }
-    row.output_block_rows = opt.output_block_rows;
-    row.backend = spmm_backend_name(backend);
-    if (csr != 0 && is_csr_variant(variant)) {
-        row.csr_nrows = csr->nrows;
-        row.csr_ncols = csr->ncols;
-        row.csr_nnz = (uint64_t)csr->nnz();
-        row.num_factor_tiles = (uint32_t)num_factor_tiles;
-        if (variant != VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND) {
-            row.num_factor_tiles = 0;
-        }
-    }
     row.repeat = repeat;
+    row.backend = spmm_backend_name(backend);
+    row.csr_nrows = csr.nrows;
+    row.csr_ncols = csr.ncols;
+    row.csr_nnz = nnz;
     return row;
 }
 
-static MetricsRow make_metric_base(const Options& opt, const PreparedTTM& prep,
-                                   VariantKind variant, int rank, int mode,
-                                   int repeat, double format_ms) {
-    return make_metric_base(opt, prep, variant, rank, mode, repeat, format_ms,
-                            0, 0, BACKEND_CUSTOM);
+static MetricsRow run_mkl_fp64(const Options& opt, const CsrMatrix& csr,
+                               const DenseMatrix<double>& factor64, int rank,
+                               int mode, int repeat, double format_ms,
+                               SpMMBackend backend, std::vector<double>* out) {
+    MetricsRow row = make_metric_base(opt, csr, VAR_MKL_FP64, rank, mode, repeat,
+                                      format_ms, backend);
+    Timer timer;
+    backend_csr_spmm_fp64(backend, csr, factor64, (size_t)rank, out, false);
+    row.compute_ms = timer.elapsed_ms();
+    row.upcast_prepare_ms = 0.0;
+    row.kernel_ms = row.compute_ms;
+    row.total_ms = row.format_prepare_ms + row.kernel_ms;
+    row.rel_error = 0.0;
+    return row;
 }
 
-static MetricsRow run_variant(const Options& opt,
-                              const PreparedTTM& prep,
-                              double format_ms,
-                              const std::vector<double>& values64,
-                              const DenseMatrix<double>& factor64,
-                              VariantKind variant,
-                              int rank,
-                              int mode,
-                              int repeat,
-                              const std::vector<double>& baseline,
-                              const CsrMatrix* csr,
-                              const CsrMatrixF* csr_float,
-                              const std::vector<CsrMatrix>* csr_tiles,
-                              SpMMBackend backend) {
-    MetricsRow row = make_metric_base(opt, prep, variant, rank, mode, repeat,
-                                      format_ms, csr,
-                                      csr_tiles == 0 ? 0 : csr_tiles->size(),
-                                      backend);
+static MetricsRow run_mkl_fp32(const Options& opt, const CsrMatrix& csr64,
+                               const CsrMatrixF& csr32,
+                               const DenseMatrix<double>& factor64,
+                               const std::vector<double>& baseline,
+                               int rank, int mode, int repeat,
+                               double format_ms, SpMMBackend backend) {
+    MetricsRow row = make_metric_base(opt, csr64, VAR_MKL_FP32, rank, mode, repeat,
+                                      format_ms, backend);
+    DenseMatrix<float> factor32 = convert_factor<float>(factor64);
+    std::vector<float> out32;
     Timer timer;
+    backend_csr_spmm_fp32(backend, csr32, factor32, (size_t)rank, &out32, false);
+    row.compute_ms = timer.elapsed_ms();
+    row.upcast_prepare_ms = 0.0;
+    row.kernel_ms = row.compute_ms;
+    row.total_ms = row.format_prepare_ms + row.kernel_ms;
     std::vector<double> out64;
+    copy_as_double(out32, &out64);
+    row.rel_error = relative_frobenius_error(out64, baseline);
+    return row;
+}
 
-    if (variant == VAR_FACTOR_FP64_COMPUTE_FP64) {
-        row.upcast_prepare_ms = 0.0;
-        timer.reset();
-        compute_ttm_threaded<double, double, double>(prep, values64, factor64,
-                                                     (size_t)rank, opt.active_threads, &out64);
-        row.compute_ms = timer.elapsed_ms();
-    } else if (variant == VAR_FACTOR_FP32_COMPUTE_FP64) {
-        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
-        timer.reset();
-        DenseMatrix<double> factor_workspace = convert_factor<double>(factor32);
-        row.upcast_prepare_ms = timer.elapsed_ms();
-        timer.reset();
-        compute_ttm_threaded<double, double, double>(prep, values64, factor_workspace,
-                                                     (size_t)rank, opt.active_threads, &out64);
-        row.compute_ms = timer.elapsed_ms();
-    } else if (variant == VAR_FACTOR_FP32_ONFLY_COMPUTE_FP64) {
-        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
-        row.upcast_prepare_ms = 0.0;
-        timer.reset();
-        compute_ttm_threaded<double, float, double>(prep, values64, factor32,
-                                                    (size_t)rank, opt.active_threads, &out64);
-        row.compute_ms = timer.elapsed_ms();
-    } else if (variant == VAR_FACTOR_FP32_BLOCKED_COMPUTE_FP64) {
-        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
-        row.thread_count = 1;
-        compute_ttm_blocked_fp32_fp64(prep, values64, factor32, (size_t)rank,
-                                      &out64, &row.upcast_prepare_ms, &row.compute_ms);
-    } else if (variant == VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64) {
-        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
-        row.thread_count = 1;
-        compute_ttm_2dblocked_fp32_fp64(prep, values64, factor32, (size_t)rank,
-                                        &out64, &row.upcast_prepare_ms, &row.compute_ms);
-    } else if (variant == VAR_FACTOR_FP32_COMPUTE_FP32) {
-        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
-        std::vector<float> values32 = convert_values<float>(values64);
-        std::vector<float> outf;
-        row.upcast_prepare_ms = 0.0;
-        timer.reset();
-        compute_ttm_threaded<float, float, float>(prep, values32, factor32,
-                                                  (size_t)rank, opt.active_threads, &outf);
-        row.compute_ms = timer.elapsed_ms();
-        copy_as_double(outf, &out64);
-    } else if (variant == VAR_VALUE_FP32_FACTOR_FP64_COMPUTE_FP64) {
-        std::vector<float> values32 = convert_values<float>(values64);
-        timer.reset();
-        std::vector<double> value_workspace = convert_values<double>(values32);
-        row.upcast_prepare_ms = timer.elapsed_ms();
-        timer.reset();
-        compute_ttm_threaded<double, double, double>(prep, value_workspace, factor64,
-                                                     (size_t)rank, opt.active_threads, &out64);
-        row.compute_ms = timer.elapsed_ms();
-    } else if (variant == VAR_CSR_FP64_FACTOR_FP64_BACKEND) {
-        row.upcast_prepare_ms = 0.0;
-        timer.reset();
-        backend_csr_spmm_fp64(backend, *csr, factor64, (size_t)rank, &out64, false);
-        row.compute_ms = timer.elapsed_ms();
-    } else if (variant == VAR_CSR_FACTOR_FP32_GLOBAL_UPCAST_FP64_BACKEND) {
-        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
-        timer.reset();
-        DenseMatrix<double> factor_workspace = convert_factor<double>(factor32);
-        row.upcast_prepare_ms = timer.elapsed_ms();
-        timer.reset();
-        backend_csr_spmm_fp64(backend, *csr, factor_workspace, (size_t)rank, &out64, false);
-        row.compute_ms = timer.elapsed_ms();
-    } else if (variant == VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND) {
-        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
-        out64.assign((size_t)csr->nrows * (size_t)rank, 0.0);
-        size_t tile;
-        for (tile = 0; csr_tiles != 0 && tile < csr_tiles->size(); ++tile) {
-            const CsrMatrix& tile_csr = (*csr_tiles)[tile];
-            uint32_t col_begin = (uint32_t)tile * opt.tile_rows;
-            DenseMatrix<double> factor_workspace(tile_csr.ncols, (size_t)rank);
-            timer.reset();
-            uint32_t local_row;
-            for (local_row = 0; local_row < tile_csr.ncols; ++local_row) {
-                size_t r;
-                for (r = 0; r < (size_t)rank; ++r) {
-                    factor_workspace((size_t)local_row, r) =
-                        (double)factor32((size_t)col_begin + local_row, r);
-                }
-            }
-            row.upcast_prepare_ms += timer.elapsed_ms();
-            timer.reset();
-            backend_csr_spmm_fp64(backend, tile_csr, factor_workspace,
-                                  (size_t)rank, &out64, true);
-            row.compute_ms += timer.elapsed_ms();
-        }
-    } else if (variant == VAR_CSR_FP32_FACTOR_FP32_BACKEND) {
-        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
-        std::vector<float> outf;
-        row.upcast_prepare_ms = 0.0;
-        timer.reset();
-        backend_csr_spmm_fp32(backend, *csr_float, factor32, (size_t)rank, &outf, false);
-        row.compute_ms = timer.elapsed_ms();
-        copy_as_double(outf, &out64);
-    }
-
+static MetricsRow run_mkl_mixed(const Options& opt, const CsrMatrix& csr,
+                                const DenseMatrix<double>& factor64,
+                                const std::vector<double>& baseline,
+                                int rank, int mode, int repeat,
+                                double format_ms, SpMMBackend backend) {
+    MetricsRow row = make_metric_base(opt, csr,
+                                      VAR_MKL_MIXED_FACTOR_FP32_STORAGE_FP64_COMPUTE,
+                                      rank, mode, repeat, format_ms, backend);
+    DenseMatrix<float> factor32 = convert_factor<float>(factor64);
+    Timer timer;
+    DenseMatrix<double> factor_workspace = convert_factor<double>(factor32);
+    row.upcast_prepare_ms = timer.elapsed_ms();
+    std::vector<double> out64;
+    timer.reset();
+    backend_csr_spmm_fp64(backend, csr, factor_workspace, (size_t)rank, &out64, false);
+    row.compute_ms = timer.elapsed_ms();
     row.kernel_ms = row.upcast_prepare_ms + row.compute_ms;
     row.total_ms = row.format_prepare_ms + row.kernel_ms;
-    if (variant == VAR_FACTOR_FP64_COMPUTE_FP64) {
-        row.rel_error = 0.0;
-    } else {
-        row.rel_error = relative_frobenius_error(out64, baseline);
-    }
+    row.rel_error = relative_frobenius_error(out64, baseline);
     return row;
-}
-
-static MetricsRow run_variant(const Options& opt,
-                              const PreparedTTM& prep,
-                              double format_ms,
-                              const std::vector<double>& values64,
-                              const DenseMatrix<double>& factor64,
-                              VariantKind variant,
-                              int rank,
-                              int mode,
-                              int repeat,
-                              const std::vector<double>& baseline) {
-    return run_variant(opt, prep, format_ms, values64, factor64, variant,
-                       rank, mode, repeat, baseline, 0, 0, 0, BACKEND_CUSTOM);
 }
 
 int main(int argc, char** argv) {
@@ -579,12 +366,11 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    SpMMBackend backend = choose_default_backend();
     size_t ni;
     for (ni = 0; ni < opt.nnzs.size(); ++ni) {
         SparseTensorCOO x = generate_random_tensor(opt.dim0, opt.dim1, opt.dim2,
                                                    (size_t)opt.nnzs[ni], opt.seed + (uint64_t)ni);
-        std::vector<double> values64 = tensor_values_double(x);
-
         size_t mi;
         for (mi = 0; mi < opt.modes.size(); ++mi) {
             int mode = opt.modes[mi];
@@ -594,23 +380,12 @@ int main(int argc, char** argv) {
             }
 
             Timer prep_timer;
-            PreparedTTM prep = prepare_ttm(x, mode, opt.tile_rows, opt.output_block_rows);
-            CsrMatrix csr;
-            CsrMatrixF csr_float;
-            std::vector<CsrMatrix> csr_tiles;
-            bool need_csr = selected_has_csr_variant(opt.selected_variants);
-            if (need_csr) {
-                csr = build_csr_from_prepared(prep, values64);
-                if (has_variant(opt.selected_variants, VAR_CSR_FP32_FACTOR_FP32_BACKEND)) {
-                    csr_float = build_csr_float_from_prepared(prep, values64);
-                }
-                if (has_variant(opt.selected_variants,
-                                VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND)) {
-                    build_csr_factor_tiles(csr, opt.tile_rows, &csr_tiles);
-                }
+            CsrMatrix csr64 = build_csr_fp64_from_tensor(x, mode);
+            CsrMatrixF csr32;
+            if (has_variant(opt.selected_variants, VAR_MKL_FP32)) {
+                csr32 = build_csr_fp32_from_tensor(x, mode);
             }
             double format_ms = prep_timer.elapsed_ms();
-            SpMMBackend backend = choose_default_backend();
 
             size_t ri;
             for (ri = 0; ri < opt.ranks.size(); ++ri) {
@@ -620,58 +395,26 @@ int main(int argc, char** argv) {
                     return 2;
                 }
                 DenseMatrix<double> factor64 =
-                    generate_factor_double((size_t)prep.factor_rows, (size_t)rank,
+                    generate_factor_double((size_t)csr64.ncols, (size_t)rank,
                                            opt.seed + (uint64_t)mode * 1000003ULL + (uint64_t)rank);
 
-                size_t ti;
-                for (ti = 0; ti < opt.thread_counts.size(); ++ti) {
-                    opt.active_threads = opt.thread_counts[ti];
+                int rep;
+                for (rep = 0; rep < opt.repeats; ++rep) {
+                    std::vector<double> baseline;
+                    MetricsRow base = run_mkl_fp64(opt, csr64, factor64, rank, mode,
+                                                   rep, format_ms, backend, &baseline);
 
-                    int rep;
-                    for (rep = 0; rep < opt.repeats; ++rep) {
-                        std::vector<double> baseline;
-                        Timer compute_timer;
-                        compute_ttm_threaded<double, double, double>(prep, values64, factor64,
-                                                                     (size_t)rank, opt.active_threads, &baseline);
-                        double baseline_compute_ms = compute_timer.elapsed_ms();
-
-                        MetricsRow base = make_metric_base(opt, prep, VAR_FACTOR_FP64_COMPUTE_FP64,
-                                                           rank, mode, rep, format_ms);
-                        base.compute_ms = baseline_compute_ms;
-                        base.upcast_prepare_ms = 0.0;
-                        base.kernel_ms = base.upcast_prepare_ms + base.compute_ms;
-                        base.total_ms = base.format_prepare_ms + base.kernel_ms;
-                        base.rel_error = 0.0;
-                        if (has_variant(opt.selected_variants, VAR_FACTOR_FP64_COMPUTE_FP64)) {
-                            csv.write(base);
-                        }
-
-                        std::vector<double> csr_reference;
-                        if (need_csr) {
-                            backend_csr_spmm_fp64(backend, csr, factor64,
-                                                  (size_t)rank, &csr_reference, false);
-                        }
-
-                        size_t vi;
-                        for (vi = 0; vi < opt.selected_variants.size(); ++vi) {
-                            if (opt.selected_variants[vi] == VAR_FACTOR_FP64_COMPUTE_FP64) {
-                                continue;
-                            }
-                            MetricsRow row;
-                            if (is_csr_variant(opt.selected_variants[vi])) {
-                                const std::vector<double>& ref =
-                                    csr_reference.empty() ? baseline : csr_reference;
-                                row = run_variant(opt, prep, format_ms, values64, factor64,
-                                                  opt.selected_variants[vi],
-                                                  rank, mode, rep, ref,
-                                                  &csr, &csr_float, &csr_tiles, backend);
-                            } else {
-                                row = run_variant(opt, prep, format_ms, values64, factor64,
-                                                  opt.selected_variants[vi],
-                                                  rank, mode, rep, baseline);
-                            }
-                            csv.write(row);
-                        }
+                    if (has_variant(opt.selected_variants, VAR_MKL_FP64)) {
+                        csv.write(base);
+                    }
+                    if (has_variant(opt.selected_variants, VAR_MKL_FP32)) {
+                        csv.write(run_mkl_fp32(opt, csr64, csr32, factor64, baseline,
+                                               rank, mode, rep, format_ms, backend));
+                    }
+                    if (has_variant(opt.selected_variants,
+                                    VAR_MKL_MIXED_FACTOR_FP32_STORAGE_FP64_COMPUTE)) {
+                        csv.write(run_mkl_mixed(opt, csr64, factor64, baseline,
+                                                rank, mode, rep, format_ms, backend));
                     }
                 }
             }
