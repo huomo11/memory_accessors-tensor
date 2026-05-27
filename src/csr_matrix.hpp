@@ -22,6 +22,21 @@ struct CsrMatrix {
     size_t nnz() const { return values.size(); }
 };
 
+struct CsrMatrixF {
+    uint32_t nrows;
+    uint32_t ncols;
+    std::vector<size_t> row_ptr;
+    std::vector<uint32_t> col_idx;
+    std::vector<float> values;
+
+    CsrMatrixF() : nrows(0), ncols(0) {}
+    CsrMatrixF(uint32_t rows, uint32_t cols) : nrows(rows), ncols(cols) {
+        row_ptr.assign((size_t)rows + 1, 0);
+    }
+
+    size_t nnz() const { return values.size(); }
+};
+
 inline CsrMatrix build_csr_from_prepared(const PreparedTTM& prep,
                                          const std::vector<double>& source_values) {
     CsrMatrix csr(prep.output_rows, prep.factor_rows);
@@ -34,6 +49,22 @@ inline CsrMatrix build_csr_from_prepared(const PreparedTTM& prep,
         const PreparedEntry& e = prep.entries[p];
         csr.col_idx[p] = e.factor_row;
         csr.values[p] = source_values[e.source_index];
+    }
+    return csr;
+}
+
+inline CsrMatrixF build_csr_float_from_prepared(const PreparedTTM& prep,
+                                                const std::vector<double>& source_values) {
+    CsrMatrixF csr(prep.output_rows, prep.factor_rows);
+    csr.row_ptr = prep.row_starts;
+    csr.col_idx.assign(prep.entries.size(), 0);
+    csr.values.assign(prep.entries.size(), 0.0f);
+
+    size_t p;
+    for (p = 0; p < prep.entries.size(); ++p) {
+        const PreparedEntry& e = prep.entries[p];
+        csr.col_idx[p] = e.factor_row;
+        csr.values[p] = (float)source_values[e.source_index];
     }
     return csr;
 }

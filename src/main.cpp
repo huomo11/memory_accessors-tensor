@@ -129,6 +129,14 @@ static bool variant_from_name(const std::string& name, VariantKind* variant) {
         *variant = VAR_CSR_FACTOR_FP32_GLOBAL_UPCAST_FP64_BACKEND;
     } else if (name == "csr_factor_fp32_tiled_accessor_fp64_backend") {
         *variant = VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND;
+    } else if (name == "csr_fp32_factor_fp32_backend" ||
+               name == "mkl_fp32") {
+        *variant = VAR_CSR_FP32_FACTOR_FP32_BACKEND;
+    } else if (name == "mkl_fp64") {
+        *variant = VAR_CSR_FP64_FACTOR_FP64_BACKEND;
+    } else if (name == "mkl_mixed_factor_fp32_storage_fp64_compute" ||
+               name == "mkl_mixed") {
+        *variant = VAR_CSR_FACTOR_FP32_GLOBAL_UPCAST_FP64_BACKEND;
     } else {
         return false;
     }
@@ -138,7 +146,8 @@ static bool variant_from_name(const std::string& name, VariantKind* variant) {
 static bool is_csr_variant(VariantKind variant) {
     return variant == VAR_CSR_FP64_FACTOR_FP64_BACKEND ||
         variant == VAR_CSR_FACTOR_FP32_GLOBAL_UPCAST_FP64_BACKEND ||
-        variant == VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND;
+        variant == VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND ||
+        variant == VAR_CSR_FP32_FACTOR_FP32_BACKEND;
 }
 
 static bool selected_has_csr_variant(const std::vector<VariantKind>& variants) {
@@ -387,7 +396,8 @@ static MetricsRow make_metric_base(const Options& opt, const PreparedTTM& prep,
     } else if (variant == VAR_FACTOR_FP32_2DBLOCKED_COMPUTE_FP64) {
         row.layout = "output_factor_2d";
     } else if (variant == VAR_CSR_FP64_FACTOR_FP64_BACKEND ||
-               variant == VAR_CSR_FACTOR_FP32_GLOBAL_UPCAST_FP64_BACKEND) {
+               variant == VAR_CSR_FACTOR_FP32_GLOBAL_UPCAST_FP64_BACKEND ||
+               variant == VAR_CSR_FP32_FACTOR_FP32_BACKEND) {
         row.layout = "csr";
     } else if (variant == VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND) {
         row.layout = "csr_factor_tile";
@@ -425,6 +435,7 @@ static MetricsRow run_variant(const Options& opt,
                               int repeat,
                               const std::vector<double>& baseline,
                               const CsrMatrix* csr,
+                              const CsrMatrixF* csr_float,
                               const std::vector<CsrMatrix>* csr_tiles,
                               SpMMBackend backend) {
     MetricsRow row = make_metric_base(opt, prep, variant, rank, mode, repeat,
@@ -521,6 +532,14 @@ static MetricsRow run_variant(const Options& opt,
                                   (size_t)rank, &out64, true);
             row.compute_ms += timer.elapsed_ms();
         }
+    } else if (variant == VAR_CSR_FP32_FACTOR_FP32_BACKEND) {
+        DenseMatrix<float> factor32 = convert_factor<float>(factor64);
+        std::vector<float> outf;
+        row.upcast_prepare_ms = 0.0;
+        timer.reset();
+        backend_csr_spmm_fp32(backend, *csr_float, factor32, (size_t)rank, &outf, false);
+        row.compute_ms = timer.elapsed_ms();
+        copy_as_double(outf, &out64);
     }
 
     row.kernel_ms = row.upcast_prepare_ms + row.compute_ms;
@@ -544,7 +563,7 @@ static MetricsRow run_variant(const Options& opt,
                               int repeat,
                               const std::vector<double>& baseline) {
     return run_variant(opt, prep, format_ms, values64, factor64, variant,
-                       rank, mode, repeat, baseline, 0, 0, BACKEND_CUSTOM);
+                       rank, mode, repeat, baseline, 0, 0, 0, BACKEND_CUSTOM);
 }
 
 int main(int argc, char** argv) {
@@ -577,10 +596,14 @@ int main(int argc, char** argv) {
             Timer prep_timer;
             PreparedTTM prep = prepare_ttm(x, mode, opt.tile_rows, opt.output_block_rows);
             CsrMatrix csr;
+            CsrMatrixF csr_float;
             std::vector<CsrMatrix> csr_tiles;
             bool need_csr = selected_has_csr_variant(opt.selected_variants);
             if (need_csr) {
                 csr = build_csr_from_prepared(prep, values64);
+                if (has_variant(opt.selected_variants, VAR_CSR_FP32_FACTOR_FP32_BACKEND)) {
+                    csr_float = build_csr_float_from_prepared(prep, values64);
+                }
                 if (has_variant(opt.selected_variants,
                                 VAR_CSR_FACTOR_FP32_TILED_ACCESSOR_FP64_BACKEND)) {
                     build_csr_factor_tiles(csr, opt.tile_rows, &csr_tiles);
@@ -623,6 +646,12 @@ int main(int argc, char** argv) {
                             csv.write(base);
                         }
 
+                        std::vector<double> csr_reference;
+                        if (need_csr) {
+                            backend_csr_spmm_fp64(backend, csr, factor64,
+                                                  (size_t)rank, &csr_reference, false);
+                        }
+
                         size_t vi;
                         for (vi = 0; vi < opt.selected_variants.size(); ++vi) {
                             if (opt.selected_variants[vi] == VAR_FACTOR_FP64_COMPUTE_FP64) {
@@ -630,10 +659,12 @@ int main(int argc, char** argv) {
                             }
                             MetricsRow row;
                             if (is_csr_variant(opt.selected_variants[vi])) {
+                                const std::vector<double>& ref =
+                                    csr_reference.empty() ? baseline : csr_reference;
                                 row = run_variant(opt, prep, format_ms, values64, factor64,
                                                   opt.selected_variants[vi],
-                                                  rank, mode, rep, baseline,
-                                                  &csr, &csr_tiles, backend);
+                                                  rank, mode, rep, ref,
+                                                  &csr, &csr_float, &csr_tiles, backend);
                             } else {
                                 row = run_variant(opt, prep, format_ms, values64, factor64,
                                                   opt.selected_variants[vi],

@@ -24,7 +24,7 @@ def as_float(row, key):
     return float(row[key])
 
 
-def speedup_line(name, base_group, other_group):
+def speedup_line(name, base_name, base_group, other_group):
     base_total = median([as_float(r, "total_ms") for r in base_group])
     base_kernel = median([as_float(r, "kernel_ms") for r in base_group])
     base_compute = median([as_float(r, "compute_ms") for r in base_group])
@@ -32,10 +32,17 @@ def speedup_line(name, base_group, other_group):
     other_kernel = median([as_float(r, "kernel_ms") for r in other_group])
     other_compute = median([as_float(r, "compute_ms") for r in other_group])
     print("")
-    print("%s vs fp64 baseline" % name)
+    print("%s vs %s" % (name, base_name))
     print("  speedup_total: %.6f" % (base_total / other_total if other_total else 0.0))
     print("  speedup_kernel: %.6f" % (base_kernel / other_kernel if other_kernel else 0.0))
     print("  speedup_compute: %.6f" % (base_compute / other_compute if other_compute else 0.0))
+
+
+def emit_speedups(base_name, candidates, by_variant):
+    if base_name in by_variant:
+        for name in candidates:
+            if name in by_variant:
+                speedup_line(name, base_name, by_variant[base_name], by_variant[name])
 
 
 def main():
@@ -82,19 +89,27 @@ def main():
         print("  median factor storage traffic share: %.6f" % median(storage_traffic))
         print("  median factor compute traffic share: %.6f" % median(compute_traffic))
 
-    base_name = "factor_fp64_compute_fp64"
-    if base_name in by_variant:
-        for name in ("factor_fp32_global_upcast_compute_fp64",
-                     "factor_fp32_compute_fp64",
-                     "factor_fp32_onfly_compute_fp64",
-                     "factor_fp32_blocked_compute_fp64",
-                     "factor_fp32_2dblocked_compute_fp64",
-                     "csr_fp64_factor_fp64_backend",
-                     "csr_factor_fp32_global_upcast_fp64_backend",
-                     "csr_factor_fp32_tiled_accessor_fp64_backend",
-                     "value_fp32_factor_fp64_compute_fp64"):
-            if name in by_variant:
-                speedup_line(name, by_variant[base_name], by_variant[name])
+    emit_speedups("mkl_fp64",
+                  ("mkl_fp32",
+                   "mkl_mixed_factor_fp32_storage_fp64_compute",
+                   "csr_fp32_factor_fp32_backend",
+                   "csr_factor_fp32_global_upcast_fp64_backend"),
+                  by_variant)
+
+    emit_speedups("factor_fp64_compute_fp64",
+                  ("factor_fp32_global_upcast_compute_fp64",
+                   "factor_fp32_compute_fp64",
+                   "factor_fp32_onfly_compute_fp64",
+                   "factor_fp32_blocked_compute_fp64",
+                   "factor_fp32_2dblocked_compute_fp64",
+                   "mkl_fp64",
+                   "mkl_fp32",
+                   "mkl_mixed_factor_fp32_storage_fp64_compute",
+                   "csr_fp64_factor_fp64_backend",
+                   "csr_factor_fp32_global_upcast_fp64_backend",
+                   "csr_factor_fp32_tiled_accessor_fp64_backend",
+                   "value_fp32_factor_fp64_compute_fp64"),
+                  by_variant)
 
     return 0
 

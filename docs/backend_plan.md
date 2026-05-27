@@ -51,11 +51,24 @@ This means Stage 3 currently validates the architecture. It does not yet claim m
 - output `Y` is fp64;
 - backend computes `Y = A F`.
 
+Formal experiment alias: `mkl_fp64`.
+
+`csr_fp32_factor_fp32_backend`
+
+- CSR `A` stores fp32 values;
+- factor `F` is fp32;
+- output `Y` is fp32;
+- backend computes `Y = A F`.
+
+Formal experiment alias: `mkl_fp32`.
+
 `csr_factor_fp32_global_upcast_fp64_backend`
 
 - factor `F` is stored in fp32;
 - accessor converts the whole factor matrix to a fp64 workspace;
 - backend computes with fp64 CSR values and fp64 factor workspace.
+
+Formal experiment alias: `mkl_mixed_factor_fp32_storage_fp64_compute`.
 
 `csr_factor_fp32_tiled_accessor_fp64_backend`
 
@@ -84,11 +97,12 @@ When MKL is found, CMake prints `MKL backend enabled`, defines `USE_MKL_BACKEND`
 
 The MKL path maps:
 
-- `csr_fp64_factor_fp64_backend` to MKL sparse double CSR SpMM;
-- `csr_factor_fp32_global_upcast_fp64_backend` to factor fp32 storage plus whole-factor fp64 workspace plus MKL sparse double CSR SpMM;
+- `mkl_fp64` to MKL sparse double CSR SpMM;
+- `mkl_fp32` to MKL sparse single CSR SpMM;
+- `mkl_mixed_factor_fp32_storage_fp64_compute` to factor fp32 storage plus whole-factor fp64 workspace plus MKL sparse double CSR SpMM;
 - `csr_factor_fp32_tiled_accessor_fp64_backend` to one MKL SpMM call per CSR column tile.
 
-The MKL call uses zero-based CSR, `mkl_sparse_d_create_csr`, `mkl_sparse_d_mm`, and `mkl_sparse_destroy`. Dense factor and output matrices are row-major.
+The fp64 MKL call uses zero-based CSR, `mkl_sparse_d_create_csr`, `mkl_sparse_d_mm`, and `mkl_sparse_destroy`. The fp32 MKL call uses `mkl_sparse_s_create_csr`, `mkl_sparse_s_mm`, and `mkl_sparse_destroy`. Dense factor and output matrices are row-major.
 
 After matrix-level CSR SpMM is validated, tensor-specific external baselines should be added separately:
 

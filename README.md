@@ -8,20 +8,9 @@ The current code does **not** implement Tucker, HOSVD, STHOSVD, R-STHOSVD, SP-ST
 
 ## Current Scope
 
-The experiment asks whether low-storage high-compute treatment of repeatedly accessed dense factor/sketch matrices is more useful than applying the same idea to sparse values.
+The earlier controlled prototype established that dense factor/sketch access is the more meaningful low-storage high-compute target. The current performance path is now MKL-focused: sparse traversal and accumulation should come from a mature CSR SpMM backend, while memory accessors manage low-precision storage and high-precision workspaces.
 
-Stage 1 uses a global-upcast prototype:
-
-- sparse tensor/core stays sparse;
-- `factor_fp32_compute_fp64` stores factors in fp32, upcasts the whole factor to fp64 workspace, and computes in fp64;
-- `factor_fp32_onfly_compute_fp64` stores factors in fp32 and casts each factor element to fp64 directly in the compute loop;
-- `factor_fp32_blocked_compute_fp64` stores factors in fp32, upcasts one factor-row tile at a time to fp64 workspace, and reuses that tile while processing its nonzeros;
-- `factor_fp32_2dblocked_compute_fp64` uses an output-row-block by factor-row-tile layout before applying the tile workspace;
-- `value_fp32_factor_fp64_compute_fp64` stores sparse values in fp32, upcasts values to fp64 workspace, and computes in fp64.
-
-The blocked accessors are intentionally single-threaded for now and ignore `--threads` for those variants. The factor-row blocked variant can update the same output row from different factor tiles. The 2D blocked variant groups by output-row block first, which is layout-aware and preserves more output locality, but this first version still processes blocks serially to keep correctness simple and avoid atomics.
-
-Later stages will replace global upcast with block-wise factor accessors.
+Hand-written sparse-loop variants remain in the code for historical controlled ablations, but formal performance runs should focus on the MKL three-line baseline below.
 
 ## Build
 
@@ -40,7 +29,21 @@ The CMake file is written for C++11 and GCC 4.8.5 style compatibility. Non-MSVC 
 
 Stage 3 adds a CSR SpMM backend prototype. Sparse-dense TTM is unfolded as `Y = A F`, where `A` is a CSR matrix and `F` is the dense factor/sketch matrix. With `USE_MKL=OFF`, the project uses a custom CSR SpMM backend to validate the accessor/backend interface. With `USE_MKL=ON` and a valid `MKL_ROOT`, CSR variants call oneMKL sparse double CSR SpMM; if MKL is not found, the build falls back to custom. See [docs/backend_plan.md](docs/backend_plan.md).
 
-Example CSR smoke:
+## MKL-focused Baseline: fp64 / fp32 / mixed
+
+Formal backend experiments should compare these three variants:
+
+- `mkl_fp64`: fp64 CSR `A`, fp64 dense `F`, fp64 output `Y`, using `mkl_sparse_d_mm`.
+- `mkl_fp32`: fp32 CSR `A`, fp32 dense `F`, fp32 output `Y`, using `mkl_sparse_s_mm`; `rel_error` is measured against `mkl_fp64`.
+- `mkl_mixed_factor_fp32_storage_fp64_compute`: fp64 CSR `A`, fp32 factor storage, whole-factor fp64 workspace, fp64 output `Y`, using `mkl_sparse_d_mm`.
+
+Run the MKL three-line experiment:
+
+```bash
+bash scripts/run_mkl_three_variants.sh
+```
+
+Example small probe:
 
 ```bash
 ./build/ttm_bench \
@@ -53,7 +56,7 @@ Example CSR smoke:
   --repeats 1 \
   --seed 42 \
   --tile-rows 8 \
-  --variants factor_fp64_compute_fp64,csr_fp64_factor_fp64_backend,csr_factor_fp32_global_upcast_fp64_backend,csr_factor_fp32_tiled_accessor_fp64_backend
+  --variants mkl_fp64,mkl_fp32,mkl_mixed_factor_fp32_storage_fp64_compute
 ```
 
 ## Smoke Test
@@ -76,7 +79,8 @@ mkdir -p results
   --repeats 1 \
   --seed 42 \
   --tile-rows 64 \
-  --output-block-rows 64
+  --output-block-rows 64 \
+  --variants mkl_fp64,mkl_fp32,mkl_mixed_factor_fp32_storage_fp64_compute
 ```
 
 ## Pilot Rank Sweep

@@ -13,6 +13,7 @@ cmake --build build -j
   --modes 0 \
   --threads 2 \
   --repeats 1 \
-  --seed 42
+  --seed 42 \
+  --variants mkl_fp64,mkl_fp32,mkl_mixed_factor_fp32_storage_fp64_compute
 
 echo "wrote results/smoke.csv"
