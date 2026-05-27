@@ -38,7 +38,7 @@ The CMake file is written for C++11 and GCC 4.8.5 style compatibility. Non-MSVC 
 
 ## CSR Backend Prototype
 
-Stage 3 adds a CSR SpMM backend prototype. Sparse-dense TTM is unfolded as `Y = A F`, where `A` is a CSR matrix and `F` is the dense factor/sketch matrix. With `USE_MKL=OFF`, the project uses a custom CSR SpMM backend to validate the accessor/backend interface. `USE_MKL=ON` is optional and does not make MKL a hard dependency. See [docs/backend_plan.md](docs/backend_plan.md).
+Stage 3 adds a CSR SpMM backend prototype. Sparse-dense TTM is unfolded as `Y = A F`, where `A` is a CSR matrix and `F` is the dense factor/sketch matrix. With `USE_MKL=OFF`, the project uses a custom CSR SpMM backend to validate the accessor/backend interface. With `USE_MKL=ON` and a valid `MKL_ROOT`, CSR variants call oneMKL sparse double CSR SpMM; if MKL is not found, the build falls back to custom. See [docs/backend_plan.md](docs/backend_plan.md).
 
 Example CSR smoke:
 
