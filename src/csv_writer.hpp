@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
@@ -44,10 +43,6 @@ struct CsvRow {
 class CsvWriter {
  public:
   explicit CsvWriter(const std::string& path) {
-    const std::filesystem::path p(path);
-    if (p.has_parent_path()) {
-      std::filesystem::create_directories(p.parent_path());
-    }
     out_.open(path, std::ios::out | std::ios::trunc);
     if (!out_) {
       throw std::runtime_error("failed to open CSV output: " + path);

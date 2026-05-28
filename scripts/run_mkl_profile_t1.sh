@@ -7,6 +7,8 @@ cd "${ROOT_DIR}"
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build -j
 
+mkdir -p results
+
 ./build/ttm_profile \
   --output results/mkl_fp64_profile_t1.csv \
   --dims 256,256,256 \

@@ -22,6 +22,19 @@ struct MklCsrHandle {
   MklCsrHandle() = default;
   MklCsrHandle(const MklCsrHandle&) = delete;
   MklCsrHandle& operator=(const MklCsrHandle&) = delete;
+  MklCsrHandle(MklCsrHandle&& other) noexcept : handle(other.handle) {
+    other.handle = nullptr;
+  }
+  MklCsrHandle& operator=(MklCsrHandle&& other) noexcept {
+    if (this != &other) {
+      if (handle != nullptr) {
+        mkl_sparse_destroy(handle);
+      }
+      handle = other.handle;
+      other.handle = nullptr;
+    }
+    return *this;
+  }
 };
 
 struct MklSetupTiming {

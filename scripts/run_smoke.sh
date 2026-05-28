@@ -7,6 +7,8 @@ cd "${ROOT_DIR}"
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build -j
 
+mkdir -p results
+
 ./build/ttm_profile \
   --output results/smoke.csv \
   --dims 32,32,32 \
