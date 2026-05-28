@@ -10,50 +10,52 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
 endif()
 
-if(NOT MKLROOT AND DEFINED ENV{MKLROOT})
-  set(MKLROOT "$ENV{MKLROOT}" CACHE PATH "Intel MKL root")
+if(NOT DEFINED MKLROOT OR "${MKLROOT}" STREQUAL "")
+  if(DEFINED ENV{MKLROOT} AND NOT "$ENV{MKLROOT}" STREQUAL "")
+    set(MKLROOT "$ENV{MKLROOT}" CACHE PATH "Intel MKL root")
+  endif()
 endif()
 
-if(NOT MKLROOT)
-  message(FATAL_ERROR "MKLROOT is required. Configure with -DMKLROOT=$MKLROOT or export MKLROOT.")
+if(NOT DEFINED MKLROOT OR "${MKLROOT}" STREQUAL "")
+  message(FATAL_ERROR "MKLROOT is required. Configure with -DMKLROOT=/opt/intel/oneapi/mkl/latest or export MKLROOT.")
 endif()
 
-find_path(MKL_INCLUDE_DIR
-  NAMES mkl.h
-  PATHS "${MKLROOT}/include"
-  NO_DEFAULT_PATH)
+set(MKL_INCLUDE_DIR "${MKLROOT}/include")
+set(MKL_MKL_H "${MKL_INCLUDE_DIR}/mkl.h")
+set(MKL_SPBLAS_H "${MKL_INCLUDE_DIR}/mkl_spblas.h")
 
-find_library(MKL_INTEL_LP64
-  NAMES mkl_intel_lp64
-  PATHS "${MKLROOT}/lib/intel64" "${MKLROOT}/lib"
-  NO_DEFAULT_PATH)
-find_library(MKL_INTEL_THREAD
-  NAMES mkl_intel_thread
-  PATHS "${MKLROOT}/lib/intel64" "${MKLROOT}/lib"
-  NO_DEFAULT_PATH)
-find_library(MKL_CORE
-  NAMES mkl_core
-  PATHS "${MKLROOT}/lib/intel64" "${MKLROOT}/lib"
-  NO_DEFAULT_PATH)
-find_library(MKL_IOMP5
-  NAMES iomp5 libiomp5
-  PATHS "${MKLROOT}/../compiler/latest/lib/intel64_lin"
-        "${MKLROOT}/../../compiler/latest/lib/intel64_lin"
-        "${MKLROOT}/lib/intel64" "${MKLROOT}/lib"
-  NO_DEFAULT_PATH)
-
-if(NOT MKL_INCLUDE_DIR OR NOT MKL_INTEL_LP64 OR NOT MKL_INTEL_THREAD OR NOT MKL_CORE OR NOT MKL_IOMP5)
-  message(FATAL_ERROR "Could not find required Intel MKL headers/libraries under MKLROOT=${MKLROOT}")
+if(NOT EXISTS "${MKL_MKL_H}")
+  message(FATAL_ERROR "MKL header missing: ${MKL_MKL_H}")
 endif()
+
+if(NOT EXISTS "${MKL_SPBLAS_H}")
+  message(FATAL_ERROR "MKL header missing: ${MKL_SPBLAS_H}")
+endif()
+
+find_library(MKL_LIBRARY
+  NAMES mkl_rt libmkl_rt.so
+  PATHS "${MKLROOT}/lib/intel64" "${MKLROOT}/lib"
+  NO_DEFAULT_PATH)
+
+if(NOT MKL_LIBRARY)
+  message(FATAL_ERROR
+    "MKL runtime library missing. Expected libmkl_rt.so in "
+    "${MKLROOT}/lib/intel64 or ${MKLROOT}/lib")
+endif()
+
+get_filename_component(MKL_LIBRARY_DIR "${MKL_LIBRARY}" DIRECTORY)
+
+message(STATUS "MKLROOT = ${MKLROOT}")
+message(STATUS "MKL_INCLUDE_DIR = ${MKL_INCLUDE_DIR}")
+message(STATUS "MKL_LIBRARY = ${MKL_LIBRARY}")
 
 add_executable(ttm_profile src/main.cpp)
 target_include_directories(ttm_profile PRIVATE "${MKL_INCLUDE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(ttm_profile PRIVATE
-  "${MKL_INTEL_LP64}"
-  "${MKL_INTEL_THREAD}"
-  "${MKL_CORE}"
-  "${MKL_IOMP5}"
+  "${MKL_LIBRARY}"
   pthread
-  m
-  dl)
+  dl
+  m)
+set_target_properties(ttm_profile PROPERTIES
+  BUILD_RPATH "${MKL_LIBRARY_DIR}")
 target_compile_options(ttm_profile PRIVATE -Wall -Wextra -Wpedantic)
