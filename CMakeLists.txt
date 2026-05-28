@@ -1,70 +1,59 @@
-cmake_minimum_required(VERSION 3.10)
-project(memory_accessors_tensor LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.16)
 
-option(USE_MKL "Enable optional MKL sparse backend hooks when available" OFF)
-set(MKL_ROOT "" CACHE PATH "Path to Intel oneAPI MKL root")
+project(memory_accessors_tensor_profile LANGUAGES CXX)
 
-add_executable(ttm_bench
-    src/main.cpp
-)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-target_include_directories(ttm_bench PRIVATE src)
-
-if (USE_MKL)
-    set(_MKL_ROOT_CANDIDATES)
-    if (MKL_ROOT)
-        list(APPEND _MKL_ROOT_CANDIDATES "${MKL_ROOT}")
-    endif()
-    if (DEFINED ENV{MKLROOT})
-        list(APPEND _MKL_ROOT_CANDIDATES "$ENV{MKLROOT}")
-    endif()
-
-    find_path(MKL_INCLUDE_DIR
-        NAMES mkl.h
-        PATHS ${_MKL_ROOT_CANDIDATES}
-        PATH_SUFFIXES include
-        NO_DEFAULT_PATH
-    )
-    find_library(MKL_RT_LIBRARY
-        NAMES mkl_rt libmkl_rt.so
-        PATHS ${_MKL_ROOT_CANDIDATES}
-        PATH_SUFFIXES lib/intel64 lib
-        NO_DEFAULT_PATH
-    )
-
-    if (NOT MKL_INCLUDE_DIR)
-        find_path(MKL_INCLUDE_DIR mkl.h)
-    endif()
-    if (NOT MKL_RT_LIBRARY)
-        find_library(MKL_RT_LIBRARY NAMES mkl_rt libmkl_rt.so)
-    endif()
-
-    if (MKL_INCLUDE_DIR AND MKL_RT_LIBRARY)
-        target_include_directories(ttm_bench PRIVATE ${MKL_INCLUDE_DIR})
-        target_compile_definitions(ttm_bench PRIVATE USE_MKL_BACKEND=1)
-        target_link_libraries(ttm_bench PRIVATE ${MKL_RT_LIBRARY})
-        if (UNIX)
-            target_link_libraries(ttm_bench PRIVATE pthread dl m)
-        endif()
-        message(STATUS "MKL backend enabled")
-        message(STATUS "MKL include: ${MKL_INCLUDE_DIR}")
-        message(STATUS "MKL runtime: ${MKL_RT_LIBRARY}")
-    else()
-        message(WARNING "USE_MKL=ON, but MKL headers/runtime were not found. Building with custom backend only.")
-    endif()
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
 endif()
 
-set_target_properties(ttm_bench PROPERTIES
-    CXX_STANDARD 11
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
-
-find_package(Threads REQUIRED)
-target_link_libraries(ttm_bench PRIVATE Threads::Threads)
-
-if (MSVC)
-    target_compile_options(ttm_bench PRIVATE /O2 /W4)
-else()
-    target_compile_options(ttm_bench PRIVATE -std=c++11 -O3 -march=native -Wall -Wextra -Wpedantic)
+if(NOT MKLROOT AND DEFINED ENV{MKLROOT})
+  set(MKLROOT "$ENV{MKLROOT}" CACHE PATH "Intel MKL root")
 endif()
+
+if(NOT MKLROOT)
+  message(FATAL_ERROR "MKLROOT is required. Configure with -DMKLROOT=$MKLROOT or export MKLROOT.")
+endif()
+
+find_path(MKL_INCLUDE_DIR
+  NAMES mkl.h
+  PATHS "${MKLROOT}/include"
+  NO_DEFAULT_PATH)
+
+find_library(MKL_INTEL_LP64
+  NAMES mkl_intel_lp64
+  PATHS "${MKLROOT}/lib/intel64" "${MKLROOT}/lib"
+  NO_DEFAULT_PATH)
+find_library(MKL_INTEL_THREAD
+  NAMES mkl_intel_thread
+  PATHS "${MKLROOT}/lib/intel64" "${MKLROOT}/lib"
+  NO_DEFAULT_PATH)
+find_library(MKL_CORE
+  NAMES mkl_core
+  PATHS "${MKLROOT}/lib/intel64" "${MKLROOT}/lib"
+  NO_DEFAULT_PATH)
+find_library(MKL_IOMP5
+  NAMES iomp5 libiomp5
+  PATHS "${MKLROOT}/../compiler/latest/lib/intel64_lin"
+        "${MKLROOT}/../../compiler/latest/lib/intel64_lin"
+        "${MKLROOT}/lib/intel64" "${MKLROOT}/lib"
+  NO_DEFAULT_PATH)
+
+if(NOT MKL_INCLUDE_DIR OR NOT MKL_INTEL_LP64 OR NOT MKL_INTEL_THREAD OR NOT MKL_CORE OR NOT MKL_IOMP5)
+  message(FATAL_ERROR "Could not find required Intel MKL headers/libraries under MKLROOT=${MKLROOT}")
+endif()
+
+add_executable(ttm_profile src/main.cpp)
+target_include_directories(ttm_profile PRIVATE "${MKL_INCLUDE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(ttm_profile PRIVATE
+  "${MKL_INTEL_LP64}"
+  "${MKL_INTEL_THREAD}"
+  "${MKL_CORE}"
+  "${MKL_IOMP5}"
+  pthread
+  m
+  dl)
+target_compile_options(ttm_profile PRIVATE -Wall -Wextra -Wpedantic)
